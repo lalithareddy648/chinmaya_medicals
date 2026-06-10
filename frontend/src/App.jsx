@@ -17,7 +17,7 @@ import Register from './pages/Register';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/chinmaya_medicals">
         <div className="app-container">
           <Navbar />
           <main className="main-content">
