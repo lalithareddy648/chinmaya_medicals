@@ -1,41 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import OrderTimeline from '../components/OrderTimeline';
+import { Link } from 'react-router-dom';
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get('/api/orders/myorders');
       setOrders(res.data);
+      setLastUpdated(new Date());
     } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError('Failed to retrieve order logs');
+      setError('Failed to retrieve your orders. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+    // Auto-refresh every 60 seconds for live tracking
+    const interval = setInterval(fetchOrders, 60000);
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
 
-  if (loading) {
+  const getStatusColor = (status) => {
+    const map = {
+      'Placed':           '#94a3b8',
+      'Confirmed':        '#00f2fe',
+      'Packed':           '#4facfe',
+      'Out For Delivery': '#f59e0b',
+      'Delivered':        '#10b981',
+    };
+    return map[status] || '#94a3b8';
+  };
+
+  const getStatusEmoji = (status) => {
+    const map = {
+      'Placed': '📋', 'Confirmed': '✅', 'Packed': '📦',
+      'Out For Delivery': '🚚', 'Delivered': '🎉',
+    };
+    return map[status] || '📋';
+  };
+
+  if (loading && orders.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '5rem' }}>
-        <div className="processing-spinner" style={{ margin: '0 auto' }}></div>
-        <p style={{ marginTop: '1.5rem', color: 'var(--text-muted)' }}>Retrieving your order logs...</p>
+        <div className="processing-spinner" style={{ margin: '0 auto' }} />
+        <p style={{ marginTop: '1.5rem', color: 'var(--text-muted)' }}>Loading your order history...</p>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="gradient-text" style={{ marginBottom: '2rem' }}>Order History & Tracking 📦</h1>
+      {/* Header Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div>
+          <h1 className="gradient-text">My Orders & Tracking 📦</h1>
+          {lastUpdated && (
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              Last refreshed: {lastUpdated.toLocaleTimeString()} &nbsp;•&nbsp; Auto-refreshes every 60s
+            </p>
+          )}
+        </div>
+        <button className="btn btn-secondary btn-sm" onClick={fetchOrders} disabled={loading}>
+          {loading ? '⏳ Refreshing...' : '🔄 Refresh Status'}
+        </button>
+      </div>
 
       {error && (
         <div className="badge badge-danger" style={{ display: 'block', width: '100%', padding: '1rem', marginBottom: '1.5rem', textTransform: 'none', borderRadius: '12px' }}>
@@ -44,80 +82,163 @@ const MyOrders = () => {
       )}
 
       {orders.length === 0 ? (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>No Orders Found</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>You haven't placed any orders yet. Add items to your cart and complete checkout to see them here.</p>
+        <div className="glass-panel" style={{ textAlign: 'center', padding: '5rem 2rem' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🛒</div>
+          <h2 style={{ marginBottom: '0.75rem' }}>No Orders Yet</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+            You haven't placed any orders. Browse our catalog to get started!
+          </p>
+          <Link to="/" className="btn btn-primary">Browse Medicines</Link>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          {orders.map((order) => (
-            <div key={order._id} className="glass-panel" style={{ borderLeft: '4px solid var(--color-primary)' }}>
-              
-              {/* Order Info Row */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '1rem' }}>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ORDER ID</div>
-                  <strong style={{ fontSize: '1.1rem', color: 'var(--color-primary)' }}>#{order._id}</strong>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>DATE PLACED</div>
-                  <strong>{new Date(order.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PAYMENT METHOD</div>
-                  <strong>{order.paymentMethod}</strong>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>TOTAL PAID</div>
-                  <strong style={{ fontSize: '1.2rem', color: 'var(--color-success)' }}>₹{order.totalPrice}</strong>
-                </div>
-              </div>
-
-              {/* Order Tracking Timeline */}
-              <OrderTimeline status={order.deliveryStatus} />
-
-              {/* Order details grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem', marginTop: '1.5rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.5rem' }}>
-                
-                {/* Medicines List */}
-                <div>
-                  <h4 style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>Purchased Items</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {order.items.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                        <div>
-                          <strong>{item.name}</strong> <span className="badge badge-info" style={{ fontSize: '0.65rem', marginLeft: '5px' }}>{item.category}</span>
-                        </div>
-                        <div style={{ color: 'var(--color-primary)' }}>
-                          ₹{item.price} x {item.quantity} = <strong>₹{item.total}</strong>
-                        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          {orders.map((order) => {
+            const isExpanded = expandedOrder === order._id;
+            const statusColor = getStatusColor(order.deliveryStatus);
+            return (
+              <div key={order._id} className="glass-panel" style={{
+                borderLeft: `4px solid ${statusColor}`,
+                boxShadow: `0 0 20px rgba(0,0,0,0.3), -4px 0 15px ${statusColor}33`
+              }}>
+                {/* ── Top Summary Row ── */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '2.5rem' }}>{getStatusEmoji(order.deliveryStatus)}</span>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order ID</div>
+                      <div style={{ fontWeight: '700', color: 'var(--color-primary)', fontSize: '1rem' }}>#{order._id}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                        {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Items</div>
+                      <div style={{ fontWeight: '700' }}>{order.items.length} item{order.items.length !== 1 ? 's' : ''}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Payment</div>
+                      <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{order.paymentMethod}</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total</div>
+                      <div style={{ fontWeight: '800', fontSize: '1.3rem', color: 'var(--color-success)' }}>₹{order.totalPrice}</div>
+                    </div>
+                    <div style={{
+                      padding: '0.5rem 1.25rem',
+                      borderRadius: '9999px',
+                      background: `${statusColor}18`,
+                      border: `1px solid ${statusColor}50`,
+                      color: statusColor,
+                      fontWeight: '700',
+                      fontSize: '0.85rem',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {getStatusEmoji(order.deliveryStatus)} {order.deliveryStatus}
+                    </div>
                   </div>
                 </div>
 
-                {/* Delivery Address */}
-                <div className="glass-panel" style={{ background: 'rgba(0,0,0,0.15)', padding: '1.25rem' }}>
-                  <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-muted)' }}>Shipping Destination</h4>
-                  <p style={{ fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.5rem' }}>Recipient: {order.userName || user?.name}</p>
-                  <p style={{ fontSize: '0.9rem', color: '#cbd5e1', whiteSpace: 'pre-wrap', marginBottom: '0.5rem' }}>
-                    {order.shippingAddress.address}, {order.shippingAddress.city} - {order.shippingAddress.zipCode}
-                  </p>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>📞 Phone: {order.shippingAddress.phone}</p>
-                  
-                  {order.prescription && (
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-glass)' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Prescription file:</span>
-                      <a href={order.prescription} target="_blank" rel="noopener noreferrer" style={{ display: 'block', color: 'var(--color-primary)', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'underline', marginTop: '0.25rem' }}>
-                        View Uploaded Prescription 🔗
-                      </a>
-                    </div>
-                  )}
+                {/* ── Delivery Timeline ── */}
+                <div style={{ marginTop: '1.5rem' }}>
+                  <OrderTimeline status={order.deliveryStatus} />
                 </div>
 
+                {/* ── Toggle Details ── */}
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ marginTop: '0.5rem', width: '100%' }}
+                  onClick={() => setExpandedOrder(isExpanded ? null : order._id)}
+                >
+                  {isExpanded ? '▲ Hide Order Details' : '▼ View Order Details'}
+                </button>
+
+                {isExpanded && (
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-glass)', display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+
+                    {/* Items List */}
+                    <div>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Purchased Medicines
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {order.items.map((item, idx) => (
+                          <div key={idx} style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            background: 'rgba(255,255,255,0.02)', padding: '0.85rem 1.1rem',
+                            borderRadius: '10px', border: '1px solid var(--border-glass)'
+                          }}>
+                            <div>
+                              <span style={{ fontWeight: '600', marginRight: '0.5rem' }}>{item.name}</span>
+                              <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{item.category}</span>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>₹{item.price} × {item.quantity}</div>
+                              <div style={{ fontWeight: '700', color: 'var(--color-primary)' }}>₹{item.total}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Price Breakdown */}
+                      <div style={{ marginTop: '1.25rem', padding: '1rem', borderRadius: '10px', background: 'rgba(0,0,0,0.15)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Subtotal</span>
+                          <span>₹{order.itemsPrice}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          <span style={{ color: 'var(--color-success)' }}>15% Discount Applied</span>
+                          <span style={{ color: 'var(--color-success)' }}>-₹{order.discount}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-glass)', fontWeight: '800', fontSize: '1.1rem' }}>
+                          <span>Total Paid</span>
+                          <span style={{ color: 'var(--color-success)' }}>₹{order.totalPrice}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shipping Info */}
+                    <div className="glass-panel" style={{ background: 'rgba(0,0,0,0.15)', padding: '1.25rem' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Delivery Address
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <span>🏠</span>
+                          <span style={{ fontSize: '0.92rem' }}>{order.shippingAddress.address}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <span>🏙️</span>
+                          <span style={{ fontSize: '0.92rem' }}>{order.shippingAddress.city} — {order.shippingAddress.zipCode}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <span>📞</span>
+                          <span style={{ fontSize: '0.92rem' }}>{order.shippingAddress.phone}</span>
+                        </div>
+                      </div>
+
+                      {order.prescription && (
+                        <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-glass)' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>📎 Prescription Attached</div>
+                          <a href={order.prescription} target="_blank" rel="noopener noreferrer"
+                            style={{ color: 'var(--color-primary)', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'underline' }}>
+                            View Uploaded File 🔗
+                          </a>
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-glass)' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>💳 Payment Method</div>
+                        <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{order.paymentMethod}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

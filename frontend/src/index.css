@@ -967,3 +967,129 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.9rem;
   margin-top: auto;
 }
+
+/* --- ENHANCED ANIMATIONS --- */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* --- MEDICINE CARD ENHANCEMENTS --- */
+.medicine-card .medicine-name:hover {
+  color: var(--color-primary);
+}
+
+.glass-panel-hover:hover .discounted-price {
+  text-shadow: 0 0 12px rgba(0, 242, 254, 0.6);
+}
+
+/* Cart badge pulse */
+.cart-badge-pulse {
+  animation: pulse-glow 1.5s infinite;
+}
+
+/* ---- STATUS BANNER ANIMATION ---- */
+.status-banner-enter {
+  animation: fadeSlideIn 0.35s ease;
+}
+
+/* ---- STOCK BAR ---- */
+.stock-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.stock-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ---- DATA TABLE IMPROVEMENTS ---- */
+.data-table tr {
+  transition: background 0.2s;
+}
+
+.data-table tr:hover td {
+  background: rgba(0, 242, 254, 0.03);
+}
+
+/* ---- ORDER CARD STATUS GLOW ---- */
+.order-card-placed        { border-left-color: #94a3b8; }
+.order-card-confirmed     { border-left-color: #00f2fe; }
+.order-card-packed        { border-left-color: #4facfe; }
+.order-card-outfordelivery{ border-left-color: #f59e0b; }
+.order-card-delivered     { border-left-color: #10b981; }
+
+/* ---- TOAST NOTIFICATION ---- */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  padding: 1rem 1.5rem;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  backdrop-filter: blur(12px);
+  animation: fadeSlideIn 0.3s ease;
+  box-shadow: var(--shadow-card);
+  max-width: 340px;
+}
+
+.toast-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: var(--color-success);
+}
+
+.toast-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: var(--color-danger);
+}
+
+/* ---- RX RIBBON ---- */
+.rx-ribbon {
+  position: absolute;
+  top: 14px;
+  right: -22px;
+  background: #f59e0b;
+  color: #0f172a;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 0.2rem 2rem;
+  transform: rotate(40deg);
+  letter-spacing: 0.05em;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---- HERO TRUST BADGE ---- */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 9999px;
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
