@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "b1owegsng",
+    "createdAt": "2026-06-10T06:04:32.302Z",
+    "updatedAt": "2026-06-10T06:04:32.302Z",
+    "name": "Reddy Lalitha",
+    "email": "lalithareddy648@gmail.com",
+    "password": "$2a$10$8KCRsZ7CTJXQJH/GXJJF4Ou6n3enCY0mNb4rZH/esUzhAb6oH6Fu.",
+    "isAdmin": true
+  },
+  {
+    "_id": "uy13ozfe3",
+    "createdAt": "2026-06-10T06:13:01.121Z",
+    "updatedAt": "2026-06-10T06:13:01.122Z",
+    "name": "Reddy Sankar",
+    "email": "sankarreddy330@gmail.com",
+    "password": "$2a$10$uIf6/PXix74KDNYiEWL0gubauqixFmkrWre.qFun/x9LQMj/H9/na",
+    "isAdmin": false
+  }
+]

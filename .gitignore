@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+frontend/dist/
+frontend/.vite/
+
+# Nested frontend git data
+frontend/.git.backup/
+
+# Environment files
+backend/.env
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploaded prescriptions
+backend/uploads/
+
+# IDE
+.vscode/
+.idea/

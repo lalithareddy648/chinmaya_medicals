@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "o0h2mdp3l",
+    "createdAt": "2026-06-10T06:05:04.297Z",
+    "updatedAt": "2026-06-10T06:14:40.087Z",
+    "userId": "b1owegsng",
+    "userName": "Reddy Lalitha",
+    "userEmail": "lalithareddy648@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "quantity": 1,
+        "total": 35
+      }
+    ],
+    "itemsPrice": 35,
+    "discount": 5,
+    "totalPrice": 30,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Delivered"
+  }
+]
