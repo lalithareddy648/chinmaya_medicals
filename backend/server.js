@@ -11,6 +11,7 @@ import { registerUser, loginUser, getUserProfile } from './controllers/authContr
 import { getMedicines, getMedicineById, createMedicine, updateMedicine, deleteMedicine } from './controllers/medicineController.js';
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from './controllers/cartController.js';
 import { placeOrder, getMyOrders, getOrderById, getAllOrders, updateOrderStatus } from './controllers/orderController.js';
+import { getSettings, updateSettings } from './controllers/settingsController.js';
 
 // Middleware
 import { protect, admin } from './middleware/authMiddleware.js';
@@ -92,6 +93,10 @@ app.get('/api/orders/myorders', protect, getMyOrders);
 app.get('/api/orders/:id', protect, getOrderById);
 app.get('/api/orders', protect, admin, getAllOrders);
 app.put('/api/orders/:id/status', protect, admin, updateOrderStatus);
+
+// Settings Routes
+app.get('/api/settings', protect, getSettings);
+app.put('/api/settings', protect, admin, updateSettings);
 
 // Prescription Upload Route
 app.post('/api/upload', protect, upload.single('prescription'), (req, res) => {

@@ -12,6 +12,7 @@ const Cart = () => {
   const [prescriptionPath, setPrescriptionPath] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState(15);
   const navigate = useNavigate();
 
   const fetchCart = async () => {
@@ -29,6 +30,15 @@ const Cart = () => {
 
   useEffect(() => {
     fetchCart();
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setDiscountPercentage(res.data.discountPercentage || 15);
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
   }, []);
 
   const handleUpdateQty = async (medId, newQty) => {
@@ -124,7 +134,7 @@ const Cart = () => {
           {/* Cart Items List */}
           <div className="cart-items-list">
             {cart.items.map((item) => {
-              const itemOrigPrice = Math.round(item.price / 0.85);
+              const itemOrigPrice = Math.round(item.price / (1 - discountPercentage / 100));
               return (
                 <div key={item.medicineId} className="glass-panel cart-item">
                   <div className="cart-item-icon">
@@ -171,11 +181,11 @@ const Cart = () => {
             
             <div className="summary-row">
               <span>Items Total (Pre-discount)</span>
-              <span>₹{Math.round(cart.itemsPrice / 0.85)}</span>
+              <span>₹{Math.round(cart.itemsPrice / (1 - discountPercentage / 100))}</span>
             </div>
 
             <div className="summary-row discount">
-              <span>15% Flat Discount</span>
+              <span>{discountPercentage}% Flat Discount</span>
               <span>-₹{cart.discount}</span>
             </div>
 

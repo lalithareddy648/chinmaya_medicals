@@ -16,5 +16,14 @@
     "email": "sankarreddy330@gmail.com",
     "password": "$2a$10$uIf6/PXix74KDNYiEWL0gubauqixFmkrWre.qFun/x9LQMj/H9/na",
     "isAdmin": false
+  },
+  {
+    "_id": "hpeayki8x",
+    "createdAt": "2026-06-11T12:04:25.531Z",
+    "updatedAt": "2026-06-11T12:04:25.534Z",
+    "name": "Reddy Akshaya",
+    "email": "reddyakshaya939@gmail.com",
+    "password": "$2a$10$wjyEuV62UPZDZEfhElSk5.HAm6JGhbwhCfLZ0ru/tvvWvcHW/OZ0W",
+    "isAdmin": false
   }
 ]

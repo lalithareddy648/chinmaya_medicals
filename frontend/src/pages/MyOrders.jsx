@@ -195,8 +195,12 @@ const MyOrders = () => {
                           <span>₹{order.itemsPrice}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                          <span style={{ color: 'var(--color-success)' }}>15% Discount Applied</span>
+                          <span style={{ color: 'var(--color-success)' }}>Discount Applied</span>
                           <span style={{ color: 'var(--color-success)' }}>-₹{order.discount}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Delivery ({order.deliveryType || 'Local'})</span>
+                          <span>{order.deliveryCharge > 0 ? `₹${order.deliveryCharge}` : 'FREE'}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-glass)', fontWeight: '800', fontSize: '1.1rem' }}>
                           <span>Total Paid</span>

@@ -1,4 +1,4 @@
-import { Carts, Medicines } from '../config/db.js';
+import { Carts, Medicines, Settings } from '../config/db.js';
 
 // Helper to populate and calculate cart details
 const getPopulatedCart = async (userId) => {
@@ -32,7 +32,17 @@ const getPopulatedCart = async (userId) => {
     }
   }
 
-  const discount = Math.round(itemsPrice * 0.15); // 15% discount
+  let discountPct = 15;
+  try {
+    const settings = await Settings.findOne();
+    if (settings && settings.discountPercentage !== undefined) {
+      discountPct = settings.discountPercentage;
+    }
+  } catch (err) {
+    console.error('Error loading discount setting:', err);
+  }
+
+  const discount = Math.round(itemsPrice * (discountPct / 100));
   const totalPrice = itemsPrice - discount;
 
   return {

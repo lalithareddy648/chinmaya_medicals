@@ -33,8 +33,8 @@ const bikeIcon = new L.Icon({
 });
 
 const LiveTrackingMap = ({ status }) => {
-  // Pharmacy Location (Static - e.g., a central point)
-  const [pharmacyPos] = useState([17.3850, 78.4867]); // Example: Hyderabad coords
+  // Pharmacy Location (Static - Narasaraopet)
+  const [pharmacyPos] = useState([16.2361, 80.0519]);
   // Customer Location (Simulated nearby point)
   const [customerPos] = useState([
     pharmacyPos[0] + (Math.random() * 0.05 - 0.025),

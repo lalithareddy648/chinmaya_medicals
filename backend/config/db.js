@@ -119,3 +119,4 @@ export const Users = new FileCollection('users');
 export const Medicines = new FileCollection('medicines');
 export const Carts = new FileCollection('carts');
 export const Orders = new FileCollection('orders');
+export const Settings = new FileCollection('settings');

@@ -18,6 +18,8 @@ const Checkout = () => {
     zipCode: '',
     phone: ''
   });
+  const [deliveryType, setDeliveryType] = useState('Local');
+  const [discountPercentage, setDiscountPercentage] = useState(15);
   const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
   
   // Card details
@@ -49,7 +51,16 @@ const Checkout = () => {
         setLoading(false);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings');
+        setDiscountPercentage(res.data.discountPercentage || 15);
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
     fetchCart();
+    fetchSettings();
   }, [navigate]);
 
   const handleInputChange = (e) => {
@@ -106,7 +117,8 @@ const Checkout = () => {
             await axios.post('/api/orders', {
               shippingAddress,
               paymentMethod,
-              prescriptionPath
+              prescriptionPath,
+              deliveryType
             });
 
             // Trigger navbar update
@@ -208,6 +220,20 @@ const Checkout = () => {
                 required
               />
             </div>
+          </div>
+
+          <h3 style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginTop: '1rem' }}>Delivery Mode</h3>
+          <div className="form-group">
+            <label className="form-label">Delivery Destination</label>
+            <select
+              name="deliveryType"
+              className="form-control form-select"
+              value={deliveryType}
+              onChange={(e) => setDeliveryType(e.target.value)}
+            >
+              <option value="Local">Local Delivery (Free)</option>
+              <option value="Non-local">Non-local Delivery (Free above ₹500, otherwise ₹50)</option>
+            </select>
           </div>
 
           <h3 style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginTop: '1rem' }}>Payment Method</h3>
@@ -334,12 +360,20 @@ const Checkout = () => {
                 <span>₹{cart.itemsPrice}</span>
               </div>
               <div className="summary-row discount">
-                <span>15% Flat Discount</span>
+                <span>{discountPercentage}% Flat Discount</span>
                 <span>-₹{cart.discount}</span>
+              </div>
+              <div className="summary-row">
+                <span>Delivery Charge</span>
+                {((deliveryType === 'Non-local' && (cart.itemsPrice - cart.discount) < 500) ? 50 : 0) > 0 ? (
+                  <span>₹50</span>
+                ) : (
+                  <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>FREE</span>
+                )}
               </div>
               <div className="summary-row total">
                 <span>Total Billing</span>
-                <span>₹{cart.totalPrice}</span>
+                <span>₹{cart.itemsPrice - cart.discount + ((deliveryType === 'Non-local' && (cart.itemsPrice - cart.discount) < 500) ? 50 : 0)}</span>
               </div>
             </div>
 
@@ -355,7 +389,7 @@ const Checkout = () => {
               style={{ width: '100%', marginTop: '1.5rem' }}
               onClick={handlePlaceOrder}
             >
-              Place Simulated Order (₹{cart.totalPrice}) ➔
+              Place Simulated Order (₹{cart.itemsPrice - cart.discount + ((deliveryType === 'Non-local' && (cart.itemsPrice - cart.discount) < 500) ? 50 : 0)}) ➔
             </button>
 
             <Link to="/cart" className="btn btn-secondary" style={{ width: '100%', marginTop: '0.75rem' }}>

@@ -1,10 +1,10 @@
-import { Orders, Carts, Medicines, Users } from '../config/db.js';
+import { Orders, Carts, Medicines, Users, Settings } from '../config/db.js';
 
 // @desc    Place a new order
 // @route   POST /api/orders
 // @access  Private
 export const placeOrder = async (req, res) => {
-  const { shippingAddress, paymentMethod, prescriptionPath } = req.body;
+  const { shippingAddress, paymentMethod, prescriptionPath, deliveryType } = req.body;
 
   if (!shippingAddress || !shippingAddress.address || !shippingAddress.city || !shippingAddress.zipCode || !shippingAddress.phone) {
     return res.status(400).json({ message: 'Please provide full shipping details' });
@@ -58,8 +58,21 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    const discount = Math.round(itemsPrice * 0.15); // 15% discount
-    const totalPrice = itemsPrice - discount;
+    let discountPct = 15;
+    try {
+      const settings = await Settings.findOne();
+      if (settings && settings.discountPercentage !== undefined) {
+        discountPct = settings.discountPercentage;
+      }
+    } catch (err) {
+      console.error('Error loading discount setting:', err);
+    }
+
+    const discount = Math.round(itemsPrice * (discountPct / 100));
+    
+    // Calculate delivery charge: Free for local, 500rs above order for non-local, otherwise 50rs
+    const deliveryCharge = (deliveryType === 'Non-local' && (itemsPrice - discount) < 500) ? 50 : 0;
+    const totalPrice = itemsPrice - discount + deliveryCharge;
 
     // 3. Reduce inventory stocks
     for (const item of cart.items) {
@@ -77,6 +90,8 @@ export const placeOrder = async (req, res) => {
       items: orderItems,
       itemsPrice,
       discount,
+      deliveryType: deliveryType || 'Local',
+      deliveryCharge,
       totalPrice,
       shippingAddress,
       paymentMethod: paymentMethod || 'Cash on Delivery',

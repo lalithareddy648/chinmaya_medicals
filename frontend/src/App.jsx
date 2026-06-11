@@ -52,8 +52,27 @@ function App() {
               } />
             </Routes>
           </main>
-          <footer className="footer">
-            <p>© {new Date().getFullYear()} Chinmaya Medicals. All rights reserved. Full-Stack Online Pharmacy System.</p>
+          <footer className="footer" style={{ borderTop: '1px solid var(--border-glass)', padding: '2rem 2rem', background: 'rgba(255, 255, 255, 0.4)', marginTop: '3rem', fontSize: '0.9rem', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem', maxWidth: '1280px', margin: '0 auto' }}>
+              <div>
+                <h4 style={{ color: 'var(--color-primary)', marginBottom: '0.75rem' }}>Chinmaya Medicals 🏥</h4>
+                <p style={{ color: 'var(--text-muted)', maxWidth: '300px' }}>Your trusted neighborhood pharmacy now online. Providing quality healthcare, delivered fast.</p>
+              </div>
+              <div>
+                <h4 style={{ marginBottom: '0.75rem' }}>Shop Address 🏠</h4>
+                <p style={{ color: 'var(--text-muted)' }}>Rickshaw Center, Prakash Nagar,</p>
+                <p style={{ color: 'var(--text-muted)' }}>Narasaraopet, Palnadu District,</p>
+                <p style={{ color: 'var(--text-muted)' }}>Andhra Pradesh — PIN: 522601</p>
+              </div>
+              <div>
+                <h4 style={{ marginBottom: '0.75rem' }}>Contact Info 📞</h4>
+                <p style={{ color: 'var(--text-muted)' }}>Phone: <strong>+91 9848816705</strong></p>
+                <p style={{ color: 'var(--text-muted)' }}>Phone: <strong>+91 9059043387</strong></p>
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border-glass)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+              © {new Date().getFullYear()} Chinmaya Medicals. All rights reserved. Full-Stack Online Pharmacy System.
+            </div>
           </footer>
         </div>
       </Router>

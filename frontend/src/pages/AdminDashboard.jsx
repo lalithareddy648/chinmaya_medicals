@@ -29,15 +29,18 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState(15);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const ordersRes = await axios.get('/api/orders');
       const medsRes = await axios.get('/api/medicines');
+      const settingsRes = await axios.get('/api/settings');
       
       setOrders(ordersRes.data);
       setMedicines(medsRes.data);
+      setDiscountPercentage(settingsRes.data.discountPercentage || 15);
 
       // Compute stats
       const totalRev = ordersRes.data.reduce((sum, order) => sum + order.totalPrice, 0);
@@ -70,6 +73,18 @@ const AdminDashboard = () => {
       loadData();
     } catch (err) {
       alert(err.response?.data?.message || 'Error updating status');
+    }
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put('/api/settings', { discountPercentage });
+      setMessage('Store discount percentage updated successfully! ✓');
+      setTimeout(() => setMessage(''), 3000);
+      loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error saving settings');
     }
   };
 
@@ -188,6 +203,9 @@ const AdminDashboard = () => {
           <button className={`admin-sidebar-btn ${activeTab === 'inventory' ? 'active' : ''}`} onClick={() => setActiveTab('inventory')}>
             💊 Manage Inventory
           </button>
+          <button className={`admin-sidebar-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+            ⚙️ Store Settings
+          </button>
         </div>
 
         {/* Admin Main Display Panel */}
@@ -288,6 +306,7 @@ const AdminDashboard = () => {
                         <th>Order ID</th>
                         <th>Customer</th>
                         <th>Billing</th>
+                        <th>Delivery Mode</th>
                         <th>Payment</th>
                         <th>Prescription</th>
                         <th>Delivery Status</th>
@@ -301,7 +320,13 @@ const AdminDashboard = () => {
                             <strong>{order.userName}</strong>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.userEmail}</div>
                           </td>
-                          <td style={{ fontWeight: '600' }}>₹{order.totalPrice}</td>
+                          <td style={{ fontWeight: '600' }}>
+                            ₹{order.totalPrice}
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              Charge: {order.deliveryCharge > 0 ? `₹${order.deliveryCharge}` : 'Free'}
+                            </div>
+                          </td>
+                          <td style={{ fontSize: '0.85rem' }}>{order.deliveryType || 'Local'}</td>
                           <td style={{ fontSize: '0.85rem' }}>{order.paymentMethod}</td>
                           <td>
                             {order.prescription ? (
@@ -399,6 +424,34 @@ const AdminDashboard = () => {
 
         </div>
       </div>
+
+      {/* STORE SETTINGS TAB DISPLAY */}
+      {activeTab === 'settings' && (
+        <div className="glass-panel" style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>Store Configurations</h3>
+          <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Global Discount Percentage (%)</label>
+              <input
+                type="number"
+                className="form-control"
+                placeholder="e.g. 15"
+                value={discountPercentage}
+                onChange={(e) => setDiscountPercentage(e.target.value)}
+                min="0"
+                max="100"
+                required
+              />
+              <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                This discount is automatically applied to all products in customer carts and checkouts.
+              </small>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+              Save Configurations
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* ADD / EDIT MEDICINE POPUP MODAL */}
       {showMedModal && (

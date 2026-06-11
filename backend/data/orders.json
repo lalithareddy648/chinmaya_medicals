@@ -28,5 +28,65 @@
     "paymentMethod": "Cash on Delivery",
     "prescription": null,
     "deliveryStatus": "Delivered"
+  },
+  {
+    "_id": "sabdy5aog",
+    "createdAt": "2026-06-11T12:06:59.602Z",
+    "updatedAt": "2026-06-11T12:08:36.677Z",
+    "userId": "hpeayki8x",
+    "userName": "Reddy Akshaya",
+    "userEmail": "reddyakshaya939@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "quantity": 1,
+        "total": 35
+      }
+    ],
+    "itemsPrice": 35,
+    "discount": 5,
+    "totalPrice": 30,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Out For Delivery"
+  },
+  {
+    "_id": "ga5kfv96o",
+    "createdAt": "2026-06-11T12:09:21.872Z",
+    "updatedAt": "2026-06-11T12:10:04.891Z",
+    "userId": "b1owegsng",
+    "userName": "Reddy Lalitha",
+    "userEmail": "lalithareddy648@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "quantity": 1,
+        "total": 35
+      }
+    ],
+    "itemsPrice": 35,
+    "discount": 5,
+    "totalPrice": 30,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Delivered"
   }
 ]
