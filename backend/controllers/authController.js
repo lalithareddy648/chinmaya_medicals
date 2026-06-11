@@ -19,9 +19,9 @@ export const registerUser = async (req, res) => {
   }
 
   try {
-    const userExists = await Users.findOne({ email });
+    const userExists = await Users.findOne({ email: email.toLowerCase() });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     // Hash password
@@ -105,6 +105,34 @@ export const getUserProfile = async (req, res) => {
     }
   } catch (error) {
     console.error('Profile fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Simulate reset password
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: 'Please provide email and new password' });
+  }
+
+  try {
+    const user = await Users.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: 'No account found with this email' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await Users.findByIdAndUpdate(user._id, { password: hashedPassword });
+    res.json({ message: 'Password has been reset successfully! ✓' });
+  } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

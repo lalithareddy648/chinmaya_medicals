@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../api';
 import OrderTimeline from '../components/OrderTimeline';
 import LiveTrackingMap from '../components/LiveTrackingMap';
 import { Link } from 'react-router-dom';
@@ -14,7 +14,7 @@ const MyOrders = () => {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/orders/myorders');
+      const res = await api.get('/api/orders/myorders');
       setOrders(res.data);
       setLastUpdated(new Date());
     } catch (err) {

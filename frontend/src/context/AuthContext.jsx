@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 export const AuthContext = createContext();
 
@@ -8,13 +8,11 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [loading, setLoading] = useState(true);
 
-  // Sync authorization headers whenever token changes
+  // Sync token into localStorage whenever it changes
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       localStorage.setItem('token', token);
     } else {
-      delete axios.defaults.headers.common['Authorization'];
       localStorage.removeItem('token');
     }
   }, [token]);
@@ -24,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     const loadProfile = async () => {
       if (token) {
         try {
-          const res = await axios.get('/api/auth/profile');
+          const res = await api.get('/api/auth/profile');
           setUser(res.data);
         } catch (error) {
           console.error('Session expired or invalid:', error);
@@ -37,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await axios.post('/api/auth/login', { email, password });
+    const res = await api.post('/api/auth/login', { email, password });
     setUser({
       _id: res.data._id,
       name: res.data.name,
@@ -49,7 +47,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    const res = await axios.post('/api/auth/register', { name, email, password });
+    const res = await api.post('/api/auth/register', { name, email, password });
     setUser({
       _id: res.data._id,
       name: res.data.name,

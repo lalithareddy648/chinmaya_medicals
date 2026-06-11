@@ -5,12 +5,12 @@
     "category": "Tablet",
     "description": "Relief of fever, mild to moderate body pain, headache, and joint pain. Safe for all age groups.",
     "price": 35,
-    "stock": 118,
+    "stock": 117,
     "needsPrescription": false,
     "manufacturer": "Micro Labs Ltd",
     "dosage": "1 tablet every 4-6 hours, max 4/day",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-11T12:09:21.868Z"
+    "updatedAt": "2026-06-11T12:30:34.785Z"
   },
   {
     "_id": "med2",
@@ -44,12 +44,12 @@
     "category": "Tablet",
     "description": "Daily supplement with vitamins A, B-complex, C, D, E, minerals and antioxidants for immunity and vitality.",
     "price": 190,
-    "stock": 150,
+    "stock": 149,
     "needsPrescription": false,
     "manufacturer": "Sun Pharma Ltd",
     "dosage": "1 capsule daily after breakfast",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-01T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.797Z"
   },
   {
     "_id": "med5",
@@ -83,12 +83,12 @@
     "category": "Tablet",
     "description": "Proton pump inhibitor for GERD, peptic ulcers, and excess stomach acid.",
     "price": 65,
-    "stock": 130,
+    "stock": 129,
     "needsPrescription": false,
     "manufacturer": "Dr. Reddy's Laboratories",
     "dosage": "1 capsule daily before breakfast for 4-8 weeks",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-01T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.802Z"
   },
   {
     "_id": "med8",
@@ -96,12 +96,12 @@
     "category": "Tablet",
     "description": "Antihistamine for allergic rhinitis, urticaria, hay fever and allergic skin conditions.",
     "price": 40,
-    "stock": 200,
+    "stock": 199,
     "needsPrescription": false,
     "manufacturer": "Cipla Ltd",
     "dosage": "1 tablet once daily at bedtime",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-01T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.810Z"
   },
   {
     "_id": "med9",
@@ -122,12 +122,12 @@
     "category": "Tablet",
     "description": "PPI with domperidone for acidity, heartburn, nausea, GERD and bloating.",
     "price": 75,
-    "stock": 110,
+    "stock": 109,
     "needsPrescription": false,
     "manufacturer": "Alkem Laboratories",
     "dosage": "1 tablet daily 30 minutes before breakfast",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-01T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.813Z"
   },
   {
     "_id": "med11",
@@ -161,12 +161,12 @@
     "category": "Tablet",
     "description": "Calcium carbonate with D3 for osteoporosis, rickets, and calcium deficiency.",
     "price": 130,
-    "stock": 170,
+    "stock": 169,
     "needsPrescription": false,
     "manufacturer": "Elder Pharmaceuticals",
     "dosage": "1 tablet twice daily after meals",
     "createdAt": "2026-06-02T12:00:00.000Z",
-    "updatedAt": "2026-06-02T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.822Z"
   },
   {
     "_id": "med14",
@@ -200,12 +200,12 @@
     "category": "Tablet",
     "description": "Hematonic supplement for iron deficiency anemia and folic acid deficiency in pregnancy.",
     "price": 60,
-    "stock": 220,
+    "stock": 219,
     "needsPrescription": false,
     "manufacturer": "Mankind Pharma",
     "dosage": "1 tablet daily after meals, with Vitamin C for better absorption",
     "createdAt": "2026-06-02T12:00:00.000Z",
-    "updatedAt": "2026-06-02T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.825Z"
   },
   {
     "_id": "med17",
@@ -226,12 +226,12 @@
     "category": "Tablet",
     "description": "Low-dose aspirin antiplatelet for prevention of heart attack and stroke.",
     "price": 30,
-    "stock": 300,
+    "stock": 299,
     "needsPrescription": false,
     "manufacturer": "USV Ltd",
     "dosage": "1 tablet once daily after dinner",
     "createdAt": "2026-06-02T12:00:00.000Z",
-    "updatedAt": "2026-06-02T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.828Z"
   },
   {
     "_id": "med19",
@@ -265,12 +265,12 @@
     "category": "Tablet",
     "description": "Third-generation antihistamine for allergic rhinitis, urticaria and pruritus with fewer side effects.",
     "price": 55,
-    "stock": 160,
+    "stock": 159,
     "needsPrescription": false,
     "manufacturer": "Sun Pharma Ltd",
     "dosage": "1 tablet once daily in the evening, avoid alcohol",
     "createdAt": "2026-06-03T12:00:00.000Z",
-    "updatedAt": "2026-06-03T12:00:00.000Z"
+    "updatedAt": "2026-06-11T12:30:34.830Z"
   },
   {
     "_id": "med22",

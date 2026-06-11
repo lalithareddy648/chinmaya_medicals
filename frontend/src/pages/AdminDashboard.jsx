@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, orders, inventory
@@ -20,6 +20,7 @@ const AdminDashboard = () => {
     category: 'Tablet',
     description: '',
     price: '',
+    discount: 0,
     stock: '',
     needsPrescription: false,
     manufacturer: '',
@@ -34,9 +35,9 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const ordersRes = await axios.get('/api/orders');
-      const medsRes = await axios.get('/api/medicines');
-      const settingsRes = await axios.get('/api/settings');
+      const ordersRes = await api.get('/api/orders');
+      const medsRes = await api.get('/api/medicines');
+      const settingsRes = await api.get('/api/settings');
       
       setOrders(ordersRes.data);
       setMedicines(medsRes.data);
@@ -67,7 +68,7 @@ const AdminDashboard = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await axios.put(`/api/orders/${orderId}/status`, { status: newStatus });
+      await api.put(`/api/orders/${orderId}/status`, { status: newStatus });
       setMessage(`Order #${orderId} status updated to ${newStatus} successfully! ✓`);
       setTimeout(() => setMessage(''), 3000);
       loadData();
@@ -79,8 +80,8 @@ const AdminDashboard = () => {
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     try {
-      await axios.put('/api/settings', { discountPercentage });
-      setMessage('Store discount percentage updated successfully! ✓');
+      await api.put('/api/settings', { discountPercentage });
+      setMessage('Global store discount updated successfully! ✓');
       setTimeout(() => setMessage(''), 3000);
       loadData();
     } catch (err) {
@@ -103,6 +104,7 @@ const AdminDashboard = () => {
       category: 'Tablet',
       description: '',
       price: '',
+      discount: 0,
       stock: '',
       needsPrescription: false,
       manufacturer: '',
@@ -118,6 +120,7 @@ const AdminDashboard = () => {
       category: med.category,
       description: med.description || '',
       price: med.price,
+      discount: med.discount !== undefined ? med.discount : 0,
       stock: med.stock,
       needsPrescription: med.needsPrescription || false,
       manufacturer: med.manufacturer || '',
@@ -134,14 +137,19 @@ const AdminDashboard = () => {
       return;
     }
 
+    const discount = Number(medForm.discount) || 0;
+    if (discount < 0 || discount > 100) {
+      alert('Discount must be between 0 and 100.');
+      return;
+    }
+
     try {
+      const payload = { ...medForm, discount };
       if (editMed) {
-        // Update Medicine
-        await axios.put(`/api/medicines/${editMed._id}`, medForm);
+        await api.put(`/api/medicines/${editMed._id}`, payload);
         setMessage(`Medicine "${medForm.name}" updated successfully! ✓`);
       } else {
-        // Create Medicine
-        await axios.post('/api/medicines', medForm);
+        await api.post('/api/medicines', payload);
         setMessage(`New medicine "${medForm.name}" added successfully! ✓`);
       }
 
@@ -157,7 +165,7 @@ const AdminDashboard = () => {
     if (!window.confirm(`Are you sure you want to delete "${name}" from inventory?`)) return;
 
     try {
-      await axios.delete(`/api/medicines/${id}`);
+      await api.delete(`/api/medicines/${id}`);
       setMessage(`Medicine "${name}" deleted successfully from inventory. ✓`);
       setTimeout(() => setMessage(''), 3000);
       loadData();
@@ -380,6 +388,7 @@ const AdminDashboard = () => {
                         <th>Name</th>
                         <th>Category</th>
                         <th>Price</th>
+                        <th>Discount%</th>
                         <th>Stock</th>
                         <th>Prescription</th>
                         <th>Actions</th>
@@ -391,6 +400,13 @@ const AdminDashboard = () => {
                           <td style={{ fontWeight: '600' }}>{med.name}</td>
                           <td>{med.category}</td>
                           <td>₹{med.price}</td>
+                          <td>
+                            {med.discount > 0 ? (
+                              <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>{med.discount}% OFF</span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>—</span>
+                            )}
+                          </td>
                           <td>
                             <span style={{ color: med.stock <= 0 ? 'var(--color-danger)' : med.stock < 15 ? 'var(--color-warning)' : 'inherit' }}>
                               {med.stock} units
@@ -406,10 +422,10 @@ const AdminDashboard = () => {
                           <td>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                               <button className="btn btn-secondary btn-sm" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleOpenEditModal(med)}>
-                                Edit
+                                ✏️ Edit
                               </button>
                               <button className="btn btn-danger btn-sm" style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleDeleteMedicine(med._id, med.name)}>
-                                Delete
+                                🗑️ Delete
                               </button>
                             </div>
                           </td>
@@ -427,11 +443,15 @@ const AdminDashboard = () => {
 
       {/* STORE SETTINGS TAB DISPLAY */}
       {activeTab === 'settings' && (
-        <div className="glass-panel" style={{ maxWidth: '500px', margin: '0 auto' }}>
-          <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>Store Configurations</h3>
+        <div className="glass-panel" style={{ maxWidth: '560px', margin: '0 auto' }}>
+          <h3 style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>⚙️ Store Configurations</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '1.5rem' }}>
+            The <strong>Global Discount</strong> is a fallback applied to products that don't have their own per-product discount set.
+            To set a discount for a specific product, go to <strong>Manage Inventory</strong> → Edit that medicine.
+          </p>
           <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Global Discount Percentage (%)</label>
+              <label className="form-label">Global / Fallback Discount (%)</label>
               <input
                 type="number"
                 className="form-control"
@@ -443,11 +463,11 @@ const AdminDashboard = () => {
                 required
               />
               <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                This discount is automatically applied to all products in customer carts and checkouts.
+                Applied to products with no individual discount. 0 = no discount.
               </small>
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
-              Save Configurations
+              💾 Save Global Discount
             </button>
           </form>
         </div>
@@ -509,7 +529,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">Price (INR)</label>
                   <input
@@ -521,6 +541,19 @@ const AdminDashboard = () => {
                     onChange={handleMedFormChange}
                     min="1"
                     required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Discount (%)</label>
+                  <input
+                    type="number"
+                    name="discount"
+                    className="form-control"
+                    placeholder="0–100"
+                    value={medForm.discount}
+                    onChange={handleMedFormChange}
+                    min="0"
+                    max="100"
                   />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>

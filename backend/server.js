@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 
 // Controllers
-import { registerUser, loginUser, getUserProfile } from './controllers/authController.js';
+import { registerUser, loginUser, getUserProfile, resetPassword } from './controllers/authController.js';
 import { getMedicines, getMedicineById, createMedicine, updateMedicine, deleteMedicine } from './controllers/medicineController.js';
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from './controllers/cartController.js';
 import { placeOrder, getMyOrders, getOrderById, getAllOrders, updateOrderStatus } from './controllers/orderController.js';
@@ -72,6 +72,7 @@ const upload = multer({
 app.post('/api/auth/register', registerUser);
 app.post('/api/auth/login', loginUser);
 app.get('/api/auth/profile', protect, getUserProfile);
+app.post('/api/auth/reset-password', resetPassword);
 
 // Medicines Catalog Routes
 app.get('/api/medicines', getMedicines);

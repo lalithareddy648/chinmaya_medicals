@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const MedicineDetails = () => {
@@ -17,7 +17,7 @@ const MedicineDetails = () => {
     const fetchMedicine = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`/api/medicines/${id}`);
+        const res = await api.get(`/api/medicines/${id}`);
         setMedicine(res.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Medicine not found');
@@ -47,7 +47,7 @@ const MedicineDetails = () => {
     }
 
     try {
-      await axios.post('/api/cart', { medicineId: medicine._id, quantity: qty });
+      await api.post('/api/cart', { medicineId: medicine._id, quantity: qty });
       
       // Sync navbar cart
       window.dispatchEvent(new Event('cart-updated'));
@@ -80,7 +80,8 @@ const MedicineDetails = () => {
     );
   }
 
-  const originalPrice = Math.round(medicine.price / 0.85);
+  const discPct = medicine.discount > 0 ? medicine.discount : 0;
+  const originalPrice = discPct > 0 ? Math.round(medicine.price / (1 - discPct / 100)) : null;
 
   return (
     <div>
@@ -145,19 +146,24 @@ const MedicineDetails = () => {
           <p className="details-desc">{medicine.description}</p>
 
           <div className="specs-grid">
-            <div className="spec-item">
-              <div className="spec-label">Pre-Discount Price</div>
-              <div className="spec-value" style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>
-                ₹{originalPrice}
+            {originalPrice && (
+              <div className="spec-item">
+                <div className="spec-label">Original MRP</div>
+                <div className="spec-value" style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>
+                  ₹{originalPrice}
+                </div>
               </div>
-            </div>
+            )}
             <div className="spec-item">
-              <div className="spec-label">Final Offer Price</div>
+              <div className="spec-label">Offer Price</div>
               <div className="spec-value" style={{ color: 'var(--color-primary)', fontSize: '1.4rem' }}>
-                ₹{medicine.price} <span style={{ fontSize: '0.8rem', color: 'var(--color-success)', fontWeight: '600' }}>(15% OFF)</span>
+                ₹{medicine.price}
+                {discPct > 0 && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-success)', fontWeight: '600' }}> ({discPct}% OFF)</span>
+                )}
               </div>
             </div>
-            <div className="spec-item" style={{ gridColumn: 'span 2' }}>
+            <div className="spec-item" style={{ gridColumn: discPct > 0 ? 'auto' : 'span 2' }}>
               <div className="spec-label">Recommended Dosage</div>
               <div className="spec-value">{medicine.dosage || 'Take as directed by doctor'}</div>
             </div>

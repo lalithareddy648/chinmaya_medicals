@@ -88,5 +88,99 @@
     "paymentMethod": "Cash on Delivery",
     "prescription": null,
     "deliveryStatus": "Delivered"
+  },
+  {
+    "_id": "gwd0et3fu",
+    "createdAt": "2026-06-11T12:30:34.834Z",
+    "updatedAt": "2026-06-11T12:30:34.834Z",
+    "userId": "b1owegsng",
+    "userName": "Reddy Lalitha",
+    "userEmail": "lalithareddy648@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "quantity": 1,
+        "total": 35
+      },
+      {
+        "medicineId": "med4",
+        "name": "Multivitamin A-Z Capsule",
+        "category": "Tablet",
+        "price": 190,
+        "quantity": 1,
+        "total": 190
+      },
+      {
+        "medicineId": "med7",
+        "name": "Omeprazole 20mg (Omez)",
+        "category": "Tablet",
+        "price": 65,
+        "quantity": 1,
+        "total": 65
+      },
+      {
+        "medicineId": "med8",
+        "name": "Cetirizine 10mg (Alerid)",
+        "category": "Tablet",
+        "price": 40,
+        "quantity": 1,
+        "total": 40
+      },
+      {
+        "medicineId": "med10",
+        "name": "Pantoprazole 40mg (Pan-D)",
+        "category": "Tablet",
+        "price": 75,
+        "quantity": 1,
+        "total": 75
+      },
+      {
+        "medicineId": "med13",
+        "name": "Calcium + Vitamin D3 (Shelcal 500)",
+        "category": "Tablet",
+        "price": 130,
+        "quantity": 1,
+        "total": 130
+      },
+      {
+        "medicineId": "med16",
+        "name": "Iron + Folic Acid (Ferrous Sulfate)",
+        "category": "Tablet",
+        "price": 60,
+        "quantity": 1,
+        "total": 60
+      },
+      {
+        "medicineId": "med18",
+        "name": "Aspirin 75mg (Ecosprin)",
+        "category": "Tablet",
+        "price": 30,
+        "quantity": 1,
+        "total": 30
+      },
+      {
+        "medicineId": "med21",
+        "name": "Levocetirizine 5mg (L-Cetriz)",
+        "category": "Tablet",
+        "price": 55,
+        "quantity": 1,
+        "total": 55
+      }
+    ],
+    "itemsPrice": 680,
+    "discount": 102,
+    "totalPrice": 578,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "9398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Placed"
   }
 ]

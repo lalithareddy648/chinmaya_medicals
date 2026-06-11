@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const Checkout = () => {
@@ -50,7 +50,7 @@ const Checkout = () => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await axios.get('/api/cart');
+        const res = await api.get('/api/cart');
         setCart(res.data);
         if (res.data.items.length === 0) {
           navigate('/cart');
@@ -64,7 +64,7 @@ const Checkout = () => {
     };
     const fetchSettings = async () => {
       try {
-        const res = await axios.get('/api/settings');
+        const res = await api.get('/api/settings');
         setDiscountPercentage(res.data.discountPercentage || 15);
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -125,7 +125,7 @@ const Checkout = () => {
         setTimeout(async () => {
           try {
             // POST request to create the order
-            await axios.post('/api/orders', {
+            await api.post('/api/orders', {
               shippingAddress,
               paymentMethod,
               prescriptionPath,

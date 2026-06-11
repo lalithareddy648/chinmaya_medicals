@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const Cart = () => {
@@ -18,7 +18,7 @@ const Cart = () => {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/cart');
+      const res = await api.get('/api/cart');
       setCart(res.data);
     } catch (err) {
       console.error('Error fetching cart:', err);
@@ -32,7 +32,7 @@ const Cart = () => {
     fetchCart();
     const fetchSettings = async () => {
       try {
-        const res = await axios.get('/api/settings');
+        const res = await api.get('/api/settings');
         setDiscountPercentage(res.data.discountPercentage || 15);
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -43,7 +43,7 @@ const Cart = () => {
 
   const handleUpdateQty = async (medId, newQty) => {
     try {
-      const res = await axios.put('/api/cart', { medicineId: medId, quantity: newQty });
+      const res = await api.put('/api/cart', { medicineId: medId, quantity: newQty });
       setCart(res.data);
       window.dispatchEvent(new Event('cart-updated'));
     } catch (err) {
@@ -53,7 +53,7 @@ const Cart = () => {
 
   const handleRemoveItem = async (medId) => {
     try {
-      const res = await axios.delete(`/api/cart/${medId}`);
+      const res = await api.delete(`/api/cart/${medId}`);
       setCart(res.data);
       window.dispatchEvent(new Event('cart-updated'));
     } catch (err) {
@@ -80,10 +80,8 @@ const Cart = () => {
     formData.append('prescription', file);
 
     try {
-      const res = await axios.post('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      const res = await api.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       setPrescriptionPath(res.data.filePath);
     } catch (err) {

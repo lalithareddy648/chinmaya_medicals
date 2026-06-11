@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const CATEGORY_ICONS = { All: '💊', Tablet: '💊', Syrup: '🍶', Injection: '💉' };
@@ -18,7 +18,7 @@ const Home = () => {
   const fetchMedicines = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/medicines', { params: { search, category } });
+      const res = await api.get('/api/medicines', { params: { search, category } });
       setMedicines(res.data);
     } catch (err) {
       console.error('Error fetching medicines:', err);
@@ -36,7 +36,7 @@ const Home = () => {
     if (!user) { navigate('/login'); return; }
     setAddingIds(prev => new Set(prev).add(medId));
     try {
-      await axios.post('/api/cart', { medicineId: medId, quantity: 1 });
+      await api.post('/api/cart', { medicineId: medId, quantity: 1 });
       window.dispatchEvent(new Event('cart-updated'));
       setActionMessage({ id: medId, text: '✓ Added to cart!', type: 'success' });
     } catch (err) {
@@ -61,11 +61,11 @@ const Home = () => {
       {/* ──────── HERO BANNER ──────── */}
       <div className="hero-banner" style={{ minHeight: '280px' }}>
         <div className="hero-text">
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.9rem', borderRadius: '9999px', background: 'rgba(0,242,254,0.1)', border: '1px solid rgba(0,242,254,0.3)', fontSize: '0.8rem', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '1rem', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.9rem', borderRadius: '9999px', background: 'rgba(21,101,192,0.10)', border: '1px solid rgba(21,101,192,0.22)', fontSize: '0.8rem', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '1rem', letterSpacing: '0.05em' }}>
             🏥 TRUSTED ONLINE PHARMACY
           </div>
           <h1>Quality Healthcare, <br /><span className="gradient-text">Delivered Fast.</span></h1>
-          <p>Order prescription & OTC medicines with a flat <strong style={{ color: 'var(--color-primary)' }}>15% discount</strong> on every order. Real-time delivery tracking included.</p>
+          <p>Order prescription & OTC medicines with exclusive discounts on every product. Real-time delivery tracking included.</p>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <a href="#catalog" className="btn btn-primary">Browse Medicines 💊</a>
             {user ? (
@@ -157,7 +157,9 @@ const Home = () => {
         ) : (
           <div className="medicines-grid">
             {medicines.map((med) => {
-              const originalPrice = Math.round(med.price / 0.85);
+              // Use per-product discount if set, else 0 (no markup shown)
+              const discPct = med.discount > 0 ? med.discount : 0;
+              const originalPrice = discPct > 0 ? Math.round(med.price / (1 - discPct / 100)) : null;
               const stockInfo = getStockInfo(med.stock);
               const isAdding = addingIds.has(med._id);
 
@@ -208,11 +210,15 @@ const Home = () => {
 
                   <div className="medicine-footer">
                     <div className="price-box">
-                      <span className="original-price">MRP ₹{originalPrice}</span>
+                      {originalPrice && (
+                        <span className="original-price">MRP ₹{originalPrice}</span>
+                      )}
                       <span className="discounted-price">₹{med.price}</span>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--color-success)', fontWeight: '700' }}>
-                        ● 15% OFF APPLIED
-                      </span>
+                      {discPct > 0 && (
+                        <span style={{ fontSize: '0.68rem', color: 'var(--color-success)', fontWeight: '700' }}>
+                          ● {discPct}% OFF
+                        </span>
+                      )}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-end' }}>
                       <button

@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 const Navbar = () => {
@@ -11,7 +11,7 @@ const Navbar = () => {
   const fetchCartCount = async () => {
     if (user) {
       try {
-        const res = await axios.get('/api/cart');
+        const res = await api.get('/api/cart');
         const count = res.data.items.reduce((sum, item) => sum + item.quantity, 0);
         setCartCount(count);
       } catch (err) {

@@ -17,8 +17,8 @@ export const getMedicines = async (req, res) => {
     // If search keyword is provided, filter list locally for robust matching
     if (search) {
       const keyword = search.toLowerCase();
-      list = list.filter(med => 
-        med.name.toLowerCase().includes(keyword) || 
+      list = list.filter(med =>
+        med.name.toLowerCase().includes(keyword) ||
         med.description.toLowerCase().includes(keyword) ||
         (med.manufacturer && med.manufacturer.toLowerCase().includes(keyword))
       );
@@ -52,10 +52,16 @@ export const getMedicineById = async (req, res) => {
 // @route   POST /api/medicines
 // @access  Private/Admin
 export const createMedicine = async (req, res) => {
-  const { name, category, description, price, stock, needsPrescription, manufacturer, dosage } = req.body;
+  const { name, category, description, price, discount, stock, needsPrescription, manufacturer, dosage } = req.body;
 
   if (!name || !category || !price || stock === undefined) {
     return res.status(400).json({ message: 'Please provide all required fields' });
+  }
+
+  // Validate discount
+  const discountVal = Number(discount) || 0;
+  if (discountVal < 0 || discountVal > 100) {
+    return res.status(400).json({ message: 'Discount must be between 0 and 100' });
   }
 
   try {
@@ -64,6 +70,7 @@ export const createMedicine = async (req, res) => {
       category,
       description: description || '',
       price: Number(price),
+      discount: discountVal,
       stock: Number(stock),
       needsPrescription: needsPrescription === true || needsPrescription === 'true',
       manufacturer: manufacturer || '',
@@ -77,11 +84,11 @@ export const createMedicine = async (req, res) => {
   }
 };
 
-// @desc    Update a medicine
+// @desc    Update a medicine (including per-product discount)
 // @route   PUT /api/medicines/:id
 // @access  Private/Admin
 export const updateMedicine = async (req, res) => {
-  const { name, category, description, price, stock, needsPrescription, manufacturer, dosage } = req.body;
+  const { name, category, description, price, discount, stock, needsPrescription, manufacturer, dosage } = req.body;
 
   try {
     const medicine = await Medicines.findById(req.params.id);
@@ -89,13 +96,25 @@ export const updateMedicine = async (req, res) => {
       return res.status(404).json({ message: 'Medicine not found' });
     }
 
+    // Handle discount: keep existing if not provided
+    let discountVal = medicine.discount !== undefined ? medicine.discount : 0;
+    if (discount !== undefined) {
+      discountVal = Number(discount);
+      if (discountVal < 0 || discountVal > 100) {
+        return res.status(400).json({ message: 'Discount must be between 0 and 100' });
+      }
+    }
+
     const updatedData = {
       name: name !== undefined ? name : medicine.name,
       category: category !== undefined ? category : medicine.category,
       description: description !== undefined ? description : medicine.description,
       price: price !== undefined ? Number(price) : medicine.price,
+      discount: discountVal,
       stock: stock !== undefined ? Number(stock) : medicine.stock,
-      needsPrescription: needsPrescription !== undefined ? (needsPrescription === true || needsPrescription === 'true') : medicine.needsPrescription,
+      needsPrescription: needsPrescription !== undefined
+        ? (needsPrescription === true || needsPrescription === 'true')
+        : medicine.needsPrescription,
       manufacturer: manufacturer !== undefined ? manufacturer : medicine.manufacturer,
       dosage: dosage !== undefined ? dosage : medicine.dosage
     };
