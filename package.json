@@ -2,6 +2,7 @@
   "name": "chinmaya-medicals-root",
   "version": "1.0.0",
   "description": "Full Stack Online Medical Store (Chinmaya Medicals)",
+  "type": "module",
   "scripts": {
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "backend": "npm run dev --prefix backend",
