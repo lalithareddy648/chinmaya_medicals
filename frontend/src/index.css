@@ -2,28 +2,28 @@
 
 /* --- CUSTOM VARIABLES --- */
 :root {
-  --bg-primary: #0a1128;
-  --bg-secondary: #101f42;
-  --bg-card: rgba(20, 35, 75, 0.6);
-  --bg-card-hover: rgba(28, 48, 100, 0.85);
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 1);
   
-  --color-primary: #00f2fe;
-  --color-secondary: #4facfe;
+  --color-primary: #0077b6;
+  --color-secondary: #00b4d8;
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
   --text-dark: #0f172a;
   
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-neon: rgba(0, 242, 254, 0.3);
-  --border-neon-active: rgba(0, 242, 254, 0.8);
+  --border-glass: rgba(0, 0, 0, 0.08);
+  --border-neon: rgba(0, 119, 182, 0.3);
+  --border-neon-active: rgba(0, 119, 182, 0.8);
   
-  --shadow-neon: 0 0 15px rgba(0, 242, 254, 0.25);
-  --shadow-neon-strong: 0 0 25px rgba(0, 242, 254, 0.5);
-  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --shadow-neon: 0 0 15px rgba(0, 119, 182, 0.15);
+  --shadow-neon-strong: 0 0 25px rgba(0, 119, 182, 0.3);
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
   
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -44,8 +44,8 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(0, 242, 254, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(79, 172, 254, 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(0, 119, 182, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(0, 180, 216, 0.12) 0px, transparent 50%);
   background-attachment: fixed;
 }
 
@@ -154,7 +154,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border-glass);
   color: var(--text-main);
 }
@@ -204,7 +204,7 @@ h1, h2, h3, h4, h5, h6 {
 .form-control {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(10, 17, 40, 0.7);
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid var(--border-glass);
   border-radius: 12px;
   color: var(--text-main);
@@ -270,7 +270,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   height: 70px;
-  background: rgba(10, 17, 40, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-glass);
@@ -332,7 +332,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 3rem;
   padding: 3rem;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(16, 31, 66, 0.8) 0%, rgba(10, 17, 40, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 244, 248, 0.9) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -582,7 +582,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-glass);
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .qty-btn {
@@ -714,7 +714,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 17, 40, 0.9);
+  background: rgba(255, 255, 255, 0.9);
   z-index: 2000;
   display: flex;
   flex-direction: column;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import OrderTimeline from '../components/OrderTimeline';
+import LiveTrackingMap from '../components/LiveTrackingMap';
 import { Link } from 'react-router-dom';
 
 const MyOrders = () => {
@@ -144,6 +145,11 @@ const MyOrders = () => {
                 {/* ── Delivery Timeline ── */}
                 <div style={{ marginTop: '1.5rem' }}>
                   <OrderTimeline status={order.deliveryStatus} />
+                  
+                  {/* Live GPS Tracking map logic */}
+                  {(order.deliveryStatus === 'Out For Delivery' || order.deliveryStatus === 'Delivered') && isExpanded && (
+                    <LiveTrackingMap status={order.deliveryStatus} />
+                  )}
                 </div>
 
                 {/* ── Toggle Details ── */}
