@@ -36,6 +36,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const res = await api.post('/api/auth/login', { email, password });
+    if (!res.data || typeof res.data !== 'object' || !res.data.token) {
+      throw new Error('Server returned an invalid response. Please verify your backend server is running and VITE_API_URL is configured.');
+    }
     setUser({
       _id: res.data._id,
       name: res.data.name,
@@ -48,6 +51,9 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     const res = await api.post('/api/auth/register', { name, email, password });
+    if (!res.data || typeof res.data !== 'object' || !res.data.token) {
+      throw new Error('Server returned an invalid response. Please verify your backend server is running and VITE_API_URL is configured.');
+    }
     setUser({
       _id: res.data._id,
       name: res.data.name,
