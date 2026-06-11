@@ -4,12 +4,33 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = process.env.VERCEL
+  ? path.join('/tmp', 'data')
+  : path.join(__dirname, '..', 'data');
 
 // Ensure data directory exists
 const initializeDB = async () => {
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
+    if (process.env.VERCEL) {
+      const ORIGINAL_DATA_DIR = path.join(__dirname, '..', 'data');
+      const files = ['users.json', 'medicines.json', 'orders.json', 'carts.json', 'settings.json'];
+      for (const file of files) {
+        const targetPath = path.join(DATA_DIR, file);
+        const sourcePath = path.join(ORIGINAL_DATA_DIR, file);
+        
+        const exists = await fs.access(targetPath).then(() => true).catch(() => false);
+        if (!exists) {
+          const sourceExists = await fs.access(sourcePath).then(() => true).catch(() => false);
+          if (sourceExists) {
+            await fs.copyFile(sourcePath, targetPath);
+            console.log(`Seeded ${file} to /tmp/data`);
+          } else {
+            await fs.writeFile(targetPath, '[]', 'utf-8');
+          }
+        }
+      }
+    }
   } catch (error) {
     console.error('Error creating database directory:', error);
   }
