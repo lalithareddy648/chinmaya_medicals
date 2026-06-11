@@ -97,7 +97,8 @@ export const getUserProfile = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        isAdmin: user.isAdmin
+        isAdmin: user.isAdmin,
+        shippingAddress: user.shippingAddress || null
       });
     } else {
       res.status(404).json({ message: 'User not found' });

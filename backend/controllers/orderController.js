@@ -82,6 +82,11 @@ export const placeOrder = async (req, res) => {
       });
     }
 
+    // Save shipping address to user profile
+    await Users.findByIdAndUpdate(req.user._id, {
+      shippingAddress
+    });
+
     // 4. Create order record
     const order = await Orders.create({
       userId: req.user._id,

@@ -37,6 +37,17 @@ const Checkout = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    if (user && user.shippingAddress) {
+      setShippingAddress({
+        address: user.shippingAddress.address || '',
+        city: user.shippingAddress.city || '',
+        zipCode: user.shippingAddress.zipCode || '',
+        phone: user.shippingAddress.phone || ''
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
     const fetchCart = async () => {
       try {
         const res = await axios.get('/api/cart');
