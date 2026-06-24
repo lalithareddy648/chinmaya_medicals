@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import LiveTrackingMap from '../components/LiveTrackingMap';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview'); // overview, orders, inventory
@@ -31,6 +32,25 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [discountPercentage, setDiscountPercentage] = useState(15);
+  const [trackingOrder, setTrackingOrder] = useState(null);
+
+  // Poll tracking details if a tracking order is active and it's "Out For Delivery"
+  useEffect(() => {
+    if (!trackingOrder || trackingOrder.deliveryStatus !== 'Out For Delivery') return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/orders/${trackingOrder._id}`);
+        setTrackingOrder(res.data);
+        // Also update the order in the orders list so status change reflects
+        setOrders(prevOrders => prevOrders.map(o => o._id === res.data._id ? res.data : o));
+      } catch (err) {
+        console.error('Error polling tracking order:', err);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [trackingOrder]);
 
   const loadData = async () => {
     try {
@@ -318,6 +338,7 @@ const AdminDashboard = () => {
                         <th>Payment</th>
                         <th>Prescription</th>
                         <th>Delivery Status</th>
+                        <th>GPS Tracking</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -358,6 +379,19 @@ const AdminDashboard = () => {
                               <option value="Out For Delivery">Out For Delivery</option>
                               <option value="Delivered">Delivered</option>
                             </select>
+                          </td>
+                          <td>
+                            {(order.deliveryStatus === 'Out For Delivery' || order.deliveryStatus === 'Delivered') ? (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', whiteSpace: 'nowrap' }}
+                                onClick={() => setTrackingOrder(order)}
+                              >
+                                🛰️ Track Route
+                              </button>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Not Shipped</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -617,6 +651,36 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* LIVE GPS TRACKING MODAL */}
+      {trackingOrder && (
+        <div className="processing-overlay" style={{ background: 'rgba(5, 10, 25, 0.95)' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '600px', background: 'var(--bg-secondary)', position: 'relative' }}>
+            <button
+              onClick={() => setTrackingOrder(null)}
+              style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-main)' }}
+            >
+              ✕
+            </button>
+            <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', color: 'var(--color-primary)' }}>
+              🛰️ Live Route Tracker: Order #{trackingOrder._id}
+            </h3>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Customer: <strong>{trackingOrder.userName}</strong> ({trackingOrder.userEmail}) &nbsp;•&nbsp; Status: <strong style={{ color: 'var(--color-primary)' }}>{trackingOrder.deliveryStatus}</strong>
+            </div>
+
+            <LiveTrackingMap 
+              status={trackingOrder.deliveryStatus}
+              customerCoordinates={trackingOrder.customerCoordinates}
+              driverCoordinates={trackingOrder.driverCoordinates}
+            />
+
+            <button className="btn btn-secondary" style={{ width: '100%', marginTop: '1.25rem' }} onClick={() => setTrackingOrder(null)}>
+              Close Tracker
+            </button>
           </div>
         </div>
       )}

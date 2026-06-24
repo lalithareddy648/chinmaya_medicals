@@ -13,19 +13,37 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [actionMessage, setActionMessage] = useState(null);
   const [addingIds, setAddingIds] = useState(new Set());
+  const [globalDiscount, setGlobalDiscount] = useState(15);
   const navigate = useNavigate();
 
   const fetchMedicines = async () => {
     try {
       setLoading(true);
       const res = await api.get('/api/medicines', { params: { search, category } });
-      setMedicines(res.data);
+      if (Array.isArray(res.data)) {
+        setMedicines(res.data);
+      } else {
+        console.error('Invalid medicines response format:', res.data);
+        setMedicines([]);
+      }
     } catch (err) {
       console.error('Error fetching medicines:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/api/settings');
+        setGlobalDiscount(res.data.discountPercentage || 15);
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(fetchMedicines, 300); // debounce search
@@ -157,9 +175,8 @@ const Home = () => {
         ) : (
           <div className="medicines-grid">
             {medicines.map((med) => {
-              // Use per-product discount if set, else 0 (no markup shown)
-              const discPct = med.discount > 0 ? med.discount : 0;
-              const originalPrice = discPct > 0 ? Math.round(med.price / (1 - discPct / 100)) : null;
+              const discPct = (med.discount !== undefined && med.discount > 0) ? Number(med.discount) : globalDiscount;
+              const discountedPrice = Math.round(med.price - (med.price * (discPct / 100)));
               const stockInfo = getStockInfo(med.stock);
               const isAdding = addingIds.has(med._id);
 
@@ -210,10 +227,10 @@ const Home = () => {
 
                   <div className="medicine-footer">
                     <div className="price-box">
-                      {originalPrice && (
-                        <span className="original-price">MRP ₹{originalPrice}</span>
+                      {discPct > 0 && (
+                        <span className="original-price">MRP ₹{med.price}</span>
                       )}
-                      <span className="discounted-price">₹{med.price}</span>
+                      <span className="discounted-price">₹{discountedPrice}</span>
                       {discPct > 0 && (
                         <span style={{ fontSize: '0.68rem', color: 'var(--color-success)', fontWeight: '700' }}>
                           ● {discPct}% OFF

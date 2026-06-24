@@ -11,6 +11,7 @@ const MedicineDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addedMessage, setAddedMessage] = useState(null);
+  const [globalDiscount, setGlobalDiscount] = useState(15);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,7 +26,16 @@ const MedicineDetails = () => {
         setLoading(false);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/api/settings');
+        setGlobalDiscount(res.data.discountPercentage || 15);
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
     fetchMedicine();
+    fetchSettings();
   }, [id]);
 
   const incrementQty = () => {
@@ -80,8 +90,8 @@ const MedicineDetails = () => {
     );
   }
 
-  const discPct = medicine.discount > 0 ? medicine.discount : 0;
-  const originalPrice = discPct > 0 ? Math.round(medicine.price / (1 - discPct / 100)) : null;
+  const discPct = (medicine.discount !== undefined && medicine.discount > 0) ? Number(medicine.discount) : globalDiscount;
+  const discountedPrice = Math.round(medicine.price - (medicine.price * (discPct / 100)));
 
   return (
     <div>
@@ -146,18 +156,18 @@ const MedicineDetails = () => {
           <p className="details-desc">{medicine.description}</p>
 
           <div className="specs-grid">
-            {originalPrice && (
+            {discPct > 0 && (
               <div className="spec-item">
                 <div className="spec-label">Original MRP</div>
                 <div className="spec-value" style={{ textDecoration: 'line-through', color: 'var(--text-muted)' }}>
-                  ₹{originalPrice}
+                  ₹{medicine.price}
                 </div>
               </div>
             )}
             <div className="spec-item">
               <div className="spec-label">Offer Price</div>
               <div className="spec-value" style={{ color: 'var(--color-primary)', fontSize: '1.4rem' }}>
-                ₹{medicine.price}
+                ₹{discountedPrice}
                 {discPct > 0 && (
                   <span style={{ fontSize: '0.8rem', color: 'var(--color-success)', fontWeight: '600' }}> ({discPct}% OFF)</span>
                 )}

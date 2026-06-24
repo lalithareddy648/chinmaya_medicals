@@ -2,11 +2,17 @@
   {
     "_id": "b1owegsng",
     "createdAt": "2026-06-10T06:04:32.302Z",
-    "updatedAt": "2026-06-10T06:04:32.302Z",
+    "updatedAt": "2026-06-24T14:49:29.969Z",
     "name": "Reddy Lalitha",
     "email": "lalithareddy648@gmail.com",
     "password": "$2a$10$8KCRsZ7CTJXQJH/GXJJF4Ou6n3enCY0mNb4rZH/esUzhAb6oH6Fu.",
-    "isAdmin": true
+    "isAdmin": true,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Guntur",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    }
   },
   {
     "_id": "uy13ozfe3",
@@ -25,5 +31,29 @@
     "email": "reddyakshaya939@gmail.com",
     "password": "$2a$10$wjyEuV62UPZDZEfhElSk5.HAm6JGhbwhCfLZ0ru/tvvWvcHW/OZ0W",
     "isAdmin": false
+  },
+  {
+    "_id": "qpgcdvkte",
+    "createdAt": "2026-06-11T16:06:40.706Z",
+    "updatedAt": "2026-06-12T12:40:32.451Z",
+    "name": "Admin UserAdmin User",
+    "email": "admin@chinmaya.com",
+    "password": "$2a$10$pmmNyxCRa.Iz36U8xhJj.u0exVWQ61oAWAIPYA7GV3WWuK1B7w4Vu",
+    "isAdmin": true
+  },
+  {
+    "_id": "3ntnp1x14",
+    "createdAt": "2026-06-12T12:40:33.117Z",
+    "updatedAt": "2026-06-12T12:40:33.193Z",
+    "name": "Customer User",
+    "email": "customer@test.com",
+    "password": "$2a$10$QFzscXF8Vq7m32SVESlM3O6/9N09dKQcxHlvhhGRRa.WeNLMqYvM.",
+    "isAdmin": false,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "+919999999999"
+    }
   }
 ]

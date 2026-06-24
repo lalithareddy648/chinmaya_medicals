@@ -367,16 +367,16 @@ const Checkout = () => {
 
             <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <div className="summary-row">
-                <span>Items Subtotal</span>
+                <span>Items Subtotal (MRP)</span>
                 <span>₹{cart.itemsPrice}</span>
               </div>
               <div className="summary-row discount">
-                <span>{discountPercentage}% Flat Discount</span>
+                <span>Discount Applied</span>
                 <span>-₹{cart.discount}</span>
               </div>
               <div className="summary-row">
                 <span>Delivery Charge</span>
-                {((deliveryType === 'Non-local' && (cart.itemsPrice - cart.discount) < 500) ? 50 : 0) > 0 ? (
+                {((deliveryType === 'Non-local' && cart.totalPrice < 500) ? 50 : 0) > 0 ? (
                   <span>₹50</span>
                 ) : (
                   <span style={{ color: 'var(--color-success)', fontWeight: '600' }}>FREE</span>
@@ -384,7 +384,7 @@ const Checkout = () => {
               </div>
               <div className="summary-row total">
                 <span>Total Billing</span>
-                <span>₹{cart.itemsPrice - cart.discount + ((deliveryType === 'Non-local' && (cart.itemsPrice - cart.discount) < 500) ? 50 : 0)}</span>
+                <span>₹{cart.totalPrice + ((deliveryType === 'Non-local' && cart.totalPrice < 500) ? 50 : 0)}</span>
               </div>
             </div>
 
@@ -400,7 +400,7 @@ const Checkout = () => {
               style={{ width: '100%', marginTop: '1.5rem' }}
               onClick={handlePlaceOrder}
             >
-              Place Simulated Order (₹{cart.itemsPrice - cart.discount + ((deliveryType === 'Non-local' && (cart.itemsPrice - cart.discount) < 500) ? 50 : 0)}) ➔
+              Place Simulated Order (₹{cart.totalPrice + ((deliveryType === 'Non-local' && cart.totalPrice < 500) ? 50 : 0)}) ➔
             </button>
 
             <Link to="/cart" className="btn btn-secondary" style={{ width: '100%', marginTop: '0.75rem' }}>

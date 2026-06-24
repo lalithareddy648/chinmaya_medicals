@@ -5,12 +5,13 @@
     "category": "Tablet",
     "description": "Relief of fever, mild to moderate body pain, headache, and joint pain. Safe for all age groups.",
     "price": 35,
-    "stock": 117,
+    "stock": 10,
     "needsPrescription": false,
     "manufacturer": "Micro Labs Ltd",
     "dosage": "1 tablet every 4-6 hours, max 4/day",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-11T12:30:34.785Z"
+    "updatedAt": "2026-06-24T14:54:03.695Z",
+    "discount": 10
   },
   {
     "_id": "med2",
@@ -23,7 +24,8 @@
     "manufacturer": "Cipla Ltd",
     "dosage": "1 tablet twice daily after meals for 5-7 days",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-01T12:00:00.000Z"
+    "updatedAt": "2026-06-12T12:47:05.247Z",
+    "discount": 20
   },
   {
     "_id": "med3",
@@ -44,12 +46,12 @@
     "category": "Tablet",
     "description": "Daily supplement with vitamins A, B-complex, C, D, E, minerals and antioxidants for immunity and vitality.",
     "price": 190,
-    "stock": 149,
+    "stock": 147,
     "needsPrescription": false,
     "manufacturer": "Sun Pharma Ltd",
     "dosage": "1 capsule daily after breakfast",
     "createdAt": "2026-06-01T12:00:00.000Z",
-    "updatedAt": "2026-06-11T12:30:34.797Z"
+    "updatedAt": "2026-06-24T14:49:29.967Z"
   },
   {
     "_id": "med5",

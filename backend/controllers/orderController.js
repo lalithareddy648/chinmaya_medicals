@@ -18,8 +18,19 @@ export const placeOrder = async (req, res) => {
     }
 
     // 2. Fetch full medicine details, calculate prices, check stocks
+    let discountPct = 15;
+    try {
+      const settings = await Settings.findOne();
+      if (settings && settings.discountPercentage !== undefined) {
+        discountPct = settings.discountPercentage;
+      }
+    } catch (err) {
+      console.error('Error loading discount setting:', err);
+    }
+
     const orderItems = [];
     let itemsPrice = 0;
+    let totalDiscount = 0;
     let hasPrescriptionRequiredItems = false;
 
     for (const item of cart.items) {
@@ -38,16 +49,28 @@ export const placeOrder = async (req, res) => {
         hasPrescriptionRequiredItems = true;
       }
 
-      const itemTotal = medicine.price * item.quantity;
-      itemsPrice += itemTotal;
+      const itemDiscountPct = (medicine.discount !== undefined && medicine.discount > 0)
+        ? Number(medicine.discount)
+        : discountPct;
+
+      const unitDiscount = Math.round(medicine.price * (itemDiscountPct / 100));
+      const discountedUnitPrice = medicine.price - unitDiscount;
+      const lineOriginalTotal = medicine.price * item.quantity;
+      const lineDiscount = unitDiscount * item.quantity;
+      const lineTotal = discountedUnitPrice * item.quantity;
+
+      itemsPrice += lineOriginalTotal;
+      totalDiscount += lineDiscount;
 
       orderItems.push({
         medicineId: item.medicineId,
         name: medicine.name,
         category: medicine.category,
-        price: medicine.price,
+        price: medicine.price, // Base/MRP
+        discount: itemDiscountPct,
+        discountedPrice: discountedUnitPrice,
         quantity: item.quantity,
-        total: itemTotal
+        total: lineTotal
       });
     }
 
@@ -58,21 +81,9 @@ export const placeOrder = async (req, res) => {
       });
     }
 
-    let discountPct = 15;
-    try {
-      const settings = await Settings.findOne();
-      if (settings && settings.discountPercentage !== undefined) {
-        discountPct = settings.discountPercentage;
-      }
-    } catch (err) {
-      console.error('Error loading discount setting:', err);
-    }
-
-    const discount = Math.round(itemsPrice * (discountPct / 100));
-    
     // Calculate delivery charge: Free for local, 500rs above order for non-local, otherwise 50rs
-    const deliveryCharge = (deliveryType === 'Non-local' && (itemsPrice - discount) < 500) ? 50 : 0;
-    const totalPrice = itemsPrice - discount + deliveryCharge;
+    const deliveryCharge = (deliveryType === 'Non-local' && (itemsPrice - totalDiscount) < 500) ? 50 : 0;
+    const totalPrice = itemsPrice - totalDiscount + deliveryCharge;
 
     // 3. Reduce inventory stocks
     for (const item of cart.items) {
@@ -87,6 +98,16 @@ export const placeOrder = async (req, res) => {
       shippingAddress
     });
 
+    // Generate random but persistent customer coordinates around Narasaraopet
+    const customerCoordinates = {
+      lat: 16.2361 + (Math.random() * 0.04 - 0.02),
+      lng: 80.0519 + (Math.random() * 0.04 - 0.02)
+    };
+    const driverCoordinates = {
+      lat: 16.2361,
+      lng: 80.0519
+    };
+
     // 4. Create order record
     const order = await Orders.create({
       userId: req.user._id,
@@ -94,14 +115,16 @@ export const placeOrder = async (req, res) => {
       userEmail: req.user.email,
       items: orderItems,
       itemsPrice,
-      discount,
+      discount: totalDiscount,
       deliveryType: deliveryType || 'Local',
       deliveryCharge,
       totalPrice,
       shippingAddress,
       paymentMethod: paymentMethod || 'Cash on Delivery',
       prescription: prescriptionPath || null,
-      deliveryStatus: 'Placed' // Placed, Confirmed, Packed, Out For Delivery, Delivered
+      deliveryStatus: 'Placed', // Placed, Confirmed, Packed, Out For Delivery, Delivered
+      customerCoordinates,
+      driverCoordinates
     });
 
     // 5. Clear user's cart
@@ -114,6 +137,53 @@ export const placeOrder = async (req, res) => {
   }
 };
 
+// Helper function to simulate driver movement dynamically
+const checkAndSimulateTracking = async (order) => {
+  if (!order) return order;
+
+  // Fallback to populate coordinates if not exist on old seeded orders
+  if (!order.customerCoordinates) {
+    order.customerCoordinates = {
+      lat: 16.2361 + (Math.random() * 0.04 - 0.02),
+      lng: 80.0519 + (Math.random() * 0.04 - 0.02)
+    };
+  }
+  if (!order.driverCoordinates) {
+    order.driverCoordinates = { lat: 16.2361, lng: 80.0519 };
+  }
+
+  if (order.deliveryStatus === 'Out For Delivery') {
+    const updatedAtTime = new Date(order.updatedAt).getTime();
+    const elapsedSeconds = (Date.now() - updatedAtTime) / 1000;
+    const duration = 60; // 60 seconds total trip for demo
+
+    if (elapsedSeconds >= duration) {
+      // Auto-update to Delivered
+      order.deliveryStatus = 'Delivered';
+      order.driverCoordinates = { ...order.customerCoordinates };
+      await Orders.findByIdAndUpdate(order._id, {
+        deliveryStatus: 'Delivered',
+        driverCoordinates: order.driverCoordinates
+      });
+    } else {
+      // Interpolate driver position
+      const ratio = elapsedSeconds / duration;
+      const startLat = 16.2361;
+      const startLng = 80.0519;
+      order.driverCoordinates = {
+        lat: startLat + (order.customerCoordinates.lat - startLat) * ratio,
+        lng: startLng + (order.customerCoordinates.lng - startLng) * ratio
+      };
+    }
+  } else if (order.deliveryStatus === 'Delivered') {
+    order.driverCoordinates = { ...order.customerCoordinates };
+  } else {
+    order.driverCoordinates = { lat: 16.2361, lng: 80.0519 };
+  }
+
+  return order;
+};
+
 // @desc    Get logged in user orders
 // @route   GET /api/orders/myorders
 // @access  Private
@@ -122,7 +192,13 @@ export const getMyOrders = async (req, res) => {
     const orders = await Orders.find({ userId: req.user._id });
     // Sort orders descending by date
     orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    res.json(orders);
+    
+    const processedOrders = [];
+    for (const order of orders) {
+      processedOrders.push(await checkAndSimulateTracking(order));
+    }
+
+    res.json(processedOrders);
   } catch (error) {
     console.error('Get user orders error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -144,7 +220,8 @@ export const getOrderById = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view this order' });
     }
 
-    res.json(order);
+    const processedOrder = await checkAndSimulateTracking(order);
+    res.json(processedOrder);
   } catch (error) {
     console.error('Get order by ID error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -159,7 +236,13 @@ export const getAllOrders = async (req, res) => {
     const orders = await Orders.find({});
     // Sort descending by date
     orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    res.json(orders);
+    
+    const processedOrders = [];
+    for (const order of orders) {
+      processedOrders.push(await checkAndSimulateTracking(order));
+    }
+
+    res.json(processedOrders);
   } catch (error) {
     console.error('Get all orders error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -183,11 +266,22 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    const updatedOrder = await Orders.findByIdAndUpdate(req.params.id, {
-      deliveryStatus: status
-    });
+    const updateFields = { deliveryStatus: status };
+    if (status === 'Out For Delivery') {
+      updateFields.driverCoordinates = { lat: 16.2361, lng: 80.0519 };
+    } else if (status === 'Delivered') {
+      // Fetch customer coordinates
+      const custCoords = order.customerCoordinates || {
+        lat: 16.2361 + (Math.random() * 0.04 - 0.02),
+        lng: 80.0519 + (Math.random() * 0.04 - 0.02)
+      };
+      updateFields.driverCoordinates = custCoords;
+    }
 
-    res.json(updatedOrder);
+    const updatedOrder = await Orders.findByIdAndUpdate(req.params.id, updateFields);
+    const processedOrder = await checkAndSimulateTracking(updatedOrder);
+
+    res.json(processedOrder);
   } catch (error) {
     console.error('Update order status error:', error);
     res.status(500).json({ message: 'Server error' });

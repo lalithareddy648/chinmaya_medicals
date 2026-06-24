@@ -27,12 +27,20 @@
     },
     "paymentMethod": "Cash on Delivery",
     "prescription": null,
-    "deliveryStatus": "Delivered"
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.218846033493428,
+      "lng": 80.06701875720586
+    },
+    "driverCoordinates": {
+      "lat": 16.218846033493428,
+      "lng": 80.06701875720586
+    }
   },
   {
     "_id": "sabdy5aog",
     "createdAt": "2026-06-11T12:06:59.602Z",
-    "updatedAt": "2026-06-11T12:08:36.677Z",
+    "updatedAt": "2026-06-12T12:43:37.627Z",
     "userId": "hpeayki8x",
     "userName": "Reddy Akshaya",
     "userEmail": "reddyakshaya939@gmail.com",
@@ -57,7 +65,15 @@
     },
     "paymentMethod": "Cash on Delivery",
     "prescription": null,
-    "deliveryStatus": "Out For Delivery"
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.248669489583605,
+      "lng": 80.05699723143611
+    },
+    "driverCoordinates": {
+      "lat": 16.248669489583605,
+      "lng": 80.05699723143611
+    }
   },
   {
     "_id": "ga5kfv96o",
@@ -87,12 +103,20 @@
     },
     "paymentMethod": "Cash on Delivery",
     "prescription": null,
-    "deliveryStatus": "Delivered"
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.228283540213745,
+      "lng": 80.05566279615559
+    },
+    "driverCoordinates": {
+      "lat": 16.228283540213745,
+      "lng": 80.05566279615559
+    }
   },
   {
     "_id": "gwd0et3fu",
     "createdAt": "2026-06-11T12:30:34.834Z",
-    "updatedAt": "2026-06-11T12:30:34.834Z",
+    "updatedAt": "2026-06-12T12:47:05.331Z",
     "userId": "b1owegsng",
     "userName": "Reddy Lalitha",
     "userEmail": "lalithareddy648@gmail.com",
@@ -181,6 +205,160 @@
     },
     "paymentMethod": "Cash on Delivery",
     "prescription": null,
-    "deliveryStatus": "Placed"
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.237166712855178,
+      "lng": 80.04591504560752
+    },
+    "driverCoordinates": {
+      "lat": 16.237166712855178,
+      "lng": 80.04591504560752
+    }
+  },
+  {
+    "_id": "597b5pbdf",
+    "createdAt": "2026-06-12T12:40:33.239Z",
+    "updatedAt": "2026-06-12T12:43:37.621Z",
+    "userId": "3ntnp1x14",
+    "userName": "Customer User",
+    "userEmail": "customer@test.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "discount": 10,
+        "discountedPrice": 31,
+        "quantity": 2,
+        "total": 62
+      },
+      {
+        "medicineId": "med4",
+        "name": "Multivitamin A-Z Capsule",
+        "category": "Tablet",
+        "price": 190,
+        "discount": 20,
+        "discountedPrice": 152,
+        "quantity": 1,
+        "total": 152
+      }
+    ],
+    "itemsPrice": 260,
+    "discount": 46,
+    "deliveryType": "Local",
+    "deliveryCharge": 0,
+    "totalPrice": 214,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "+919999999999"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.23820289042855,
+      "lng": 80.04466202853068
+    },
+    "driverCoordinates": {
+      "lat": 16.23820289042855,
+      "lng": 80.04466202853068
+    }
+  },
+  {
+    "_id": "ulo6z78t8",
+    "createdAt": "2026-06-12T12:44:34.830Z",
+    "updatedAt": "2026-06-12T12:46:39.171Z",
+    "userId": "b1owegsng",
+    "userName": "Reddy Lalitha",
+    "userEmail": "lalithareddy648@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "discount": 10,
+        "discountedPrice": 31,
+        "quantity": 1,
+        "total": 31
+      }
+    ],
+    "itemsPrice": 35,
+    "discount": 4,
+    "deliveryType": "Local",
+    "deliveryCharge": 0,
+    "totalPrice": 31,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.22205048591591,
+      "lng": 80.06535673947057
+    },
+    "driverCoordinates": {
+      "lat": 16.22205048591591,
+      "lng": 80.06535673947057
+    }
+  },
+  {
+    "_id": "nv6szxvqj",
+    "createdAt": "2026-06-24T14:49:29.978Z",
+    "updatedAt": "2026-06-24T14:51:42.145Z",
+    "userId": "b1owegsng",
+    "userName": "Reddy Lalitha",
+    "userEmail": "lalithareddy648@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "discount": 10,
+        "discountedPrice": 31,
+        "quantity": 1,
+        "total": 31
+      },
+      {
+        "medicineId": "med4",
+        "name": "Multivitamin A-Z Capsule",
+        "category": "Tablet",
+        "price": 190,
+        "discount": 20,
+        "discountedPrice": 152,
+        "quantity": 1,
+        "total": 152
+      }
+    ],
+    "itemsPrice": 225,
+    "discount": 42,
+    "deliveryType": "Local",
+    "deliveryCharge": 0,
+    "totalPrice": 183,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Guntur",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.248690179463168,
+      "lng": 80.03279757234588
+    },
+    "driverCoordinates": {
+      "lat": 16.248690179463168,
+      "lng": 80.03279757234588
+    }
   }
 ]

@@ -1,32 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
-/* --- CUSTOM VARIABLES (Medical Light Theme) --- */
+/* --- CUSTOM VARIABLES (Medium Dark Theme) --- */
 :root {
-  --bg-primary: #eef6fb;
-  --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.92);
-  --bg-card-hover: rgba(255, 255, 255, 1);
+  --bg-primary: #1e293b;
+  --bg-secondary: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.85);
+  --bg-card-hover: rgba(51, 65, 85, 0.95);
 
-  --color-primary: #1565C0;
-  --color-secondary: #42A5F5;
-  --color-accent: #0288D1;
-  --color-success: #2E7D32;
-  --color-warning: #F57F17;
-  --color-danger: #C62828;
+  --color-primary: #38bdf8;
+  --color-secondary: #0ea5e9;
+  --color-accent: #0284c7;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
 
-  --text-main: #1a2a3a;
-  --text-muted: #546E7A;
-  --text-dark: #0d1b2a;
-  --text-on-primary: #ffffff;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dark: #f8fafc;
+  --text-on-primary: #0f172a;
 
-  --border-glass: rgba(21, 101, 192, 0.12);
-  --border-neon: rgba(21, 101, 192, 0.25);
-  --border-neon-active: rgba(21, 101, 192, 0.6);
+  --border-glass: rgba(148, 163, 184, 0.15);
+  --border-neon: rgba(56, 189, 248, 0.25);
+  --border-neon-active: rgba(56, 189, 248, 0.6);
 
-  --shadow-neon: 0 0 18px rgba(21, 101, 192, 0.12);
-  --shadow-neon-strong: 0 0 28px rgba(21, 101, 192, 0.22);
-  --shadow-card: 0 4px 24px 0 rgba(21, 101, 192, 0.07);
-  --shadow-lift: 0 8px 32px rgba(21, 101, 192, 0.13);
+  --shadow-neon: 0 0 18px rgba(56, 189, 248, 0.12);
+  --shadow-neon-strong: 0 0 28px rgba(56, 189, 248, 0.22);
+  --shadow-card: 0 4px 24px 0 rgba(0, 0, 0, 0.25);
+  --shadow-lift: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -40,16 +40,12 @@
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--text-main);
   font-family: var(--font-family);
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
-  background-image:
-    radial-gradient(ellipse at 0% 0%, rgba(66, 165, 245, 0.10) 0px, transparent 55%),
-    radial-gradient(ellipse at 100% 100%, rgba(21, 101, 192, 0.08) 0px, transparent 55%);
-  background-attachment: fixed;
 }
 
 a {
@@ -224,7 +220,7 @@ h1, h2, h3, h4, h5, h6 {
 .form-control:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: #ffffff;
+  background: var(--bg-secondary);
   box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.10);
 }
 
@@ -280,7 +276,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   height: 70px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-card);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1.5px solid rgba(21, 101, 192, 0.10);
@@ -433,7 +429,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 9999px;
   font-weight: 600;
   font-size: 0.9rem;
-  background: #ffffff;
+  background: var(--bg-secondary);
   border: 1.5px solid var(--border-glass);
   cursor: pointer;
   transition: var(--transition-smooth);
@@ -448,7 +444,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .category-pill.active {
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  color: #ffffff;
+  color: var(--text-on-primary);
   border-color: transparent;
   box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
 }
@@ -603,7 +599,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1.5px solid var(--border-neon);
   border-radius: 12px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-secondary);
 }
 
 .qty-btn {
@@ -831,7 +827,7 @@ h1, h2, h3, h4, h5, h6 {
 .timeline-step.completed .timeline-node {
   border-color: var(--color-success);
   background: var(--color-success);
-  color: #ffffff;
+  color: var(--text-on-primary);
 }
 
 .timeline-label {
@@ -910,7 +906,7 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border: 1.5px solid var(--border-glass);
 }
 
@@ -1104,7 +1100,7 @@ h1, h2, h3, h4, h5, h6 {
   top: 14px;
   right: -22px;
   background: #F57F17;
-  color: #ffffff;
+  color: var(--text-on-primary);
   font-size: 0.62rem;
   font-weight: 800;
   padding: 0.2rem 2rem;
@@ -1133,7 +1129,7 @@ h1, h2, h3, h4, h5, h6 {
 /* ---- LIVE TRACKING MAP WRAPPER ---- */
 .tracking-map-wrapper {
   padding: 1.25rem;
-  background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
   border-radius: 18px;
   border: 1.5px solid var(--border-neon);
   margin-top: 1.5rem;

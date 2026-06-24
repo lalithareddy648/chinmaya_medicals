@@ -132,7 +132,6 @@ const Cart = () => {
           {/* Cart Items List */}
           <div className="cart-items-list">
             {cart.items.map((item) => {
-              const itemOrigPrice = Math.round(item.price / (1 - discountPercentage / 100));
               return (
                 <div key={item.medicineId} className="glass-panel cart-item">
                   <div className="cart-item-icon">
@@ -160,9 +159,11 @@ const Cart = () => {
 
                   <div className="cart-item-price">
                     ₹{item.total}
-                    <div style={{ fontSize: '0.75rem', textDecoration: 'line-through', color: 'var(--text-muted)', fontWeight: '400' }}>
-                      ₹{itemOrigPrice * item.quantity}
-                    </div>
+                    {item.discount > 0 && (
+                      <div style={{ fontSize: '0.75rem', textDecoration: 'line-through', color: 'var(--text-muted)', fontWeight: '400' }}>
+                        ₹{item.price * item.quantity}
+                      </div>
+                    )}
                   </div>
 
                   <button className="btn btn-danger btn-sm" onClick={() => handleRemoveItem(item.medicineId)}>
@@ -179,11 +180,11 @@ const Cart = () => {
             
             <div className="summary-row">
               <span>Items Total (Pre-discount)</span>
-              <span>₹{Math.round(cart.itemsPrice / (1 - discountPercentage / 100))}</span>
+              <span>₹{cart.itemsPrice}</span>
             </div>
 
             <div className="summary-row discount">
-              <span>{discountPercentage}% Flat Discount</span>
+              <span>Discount Applied</span>
               <span>-₹{cart.discount}</span>
             </div>
 

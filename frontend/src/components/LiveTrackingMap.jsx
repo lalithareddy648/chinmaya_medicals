@@ -32,48 +32,34 @@ const bikeIcon = new L.Icon({
   iconAnchor: [22, 22],
 });
 
-const LiveTrackingMap = ({ status }) => {
+const LiveTrackingMap = ({ status, customerCoordinates, driverCoordinates }) => {
   // Pharmacy Location (Static - Narasaraopet)
-  const [pharmacyPos] = useState([16.2361, 80.0519]);
-  // Customer Location (Simulated nearby point)
-  const [customerPos] = useState([
-    pharmacyPos[0] + (Math.random() * 0.05 - 0.025),
-    pharmacyPos[1] + (Math.random() * 0.05 - 0.025)
-  ]);
+  const pharmacyPos = [16.2361, 80.0519];
   
-  const [currentPos, setCurrentPos] = useState(pharmacyPos);
-  const [progress, setProgress] = useState(0);
+  // Parse coordinates from props
+  const customerPos = customerCoordinates
+    ? [customerCoordinates.lat, customerCoordinates.lng]
+    : [16.2361 + 0.015, 80.0519 + 0.015]; // fallback
 
-  useEffect(() => {
-    if (status === 'Delivered') {
-      setCurrentPos(customerPos);
-      setProgress(100);
-      return;
-    }
+  const currentPos = driverCoordinates
+    ? [driverCoordinates.lat, driverCoordinates.lng]
+    : pharmacyPos;
+
+  // Calculate distance ratio for progress
+  let progress = 0;
+  if (status === 'Delivered') {
+    progress = 100;
+  } else if (status === 'Out For Delivery' && customerCoordinates && driverCoordinates) {
+    const totalLatDist = customerCoordinates.lat - pharmacyPos[0];
+    const totalLngDist = customerCoordinates.lng - pharmacyPos[1];
+    const currentLatDist = driverCoordinates.lat - pharmacyPos[0];
+    const currentLngDist = driverCoordinates.lng - pharmacyPos[1];
     
-    if (status === 'Out For Delivery') {
-      // Animate the bike from pharmacy to customer
-      let currentProgress = 0;
-      const interval = setInterval(() => {
-        currentProgress += 1; // 1% every 200ms -> 20 seconds total trip for demo
-        if (currentProgress > 100) currentProgress = 100;
-        
-        const newLat = pharmacyPos[0] + (customerPos[0] - pharmacyPos[0]) * (currentProgress / 100);
-        const newLng = pharmacyPos[1] + (customerPos[1] - pharmacyPos[1]) * (currentProgress / 100);
-        
-        setCurrentPos([newLat, newLng]);
-        setProgress(currentProgress);
-        
-        if (currentProgress >= 100) {
-          clearInterval(interval);
-        }
-      }, 200);
-      
-      return () => clearInterval(interval);
-    } else {
-      setCurrentPos(pharmacyPos);
-    }
-  }, [status, customerPos, pharmacyPos]);
+    const totalDist = Math.sqrt(totalLatDist * totalLatDist + totalLngDist * totalLngDist);
+    const currentDist = Math.sqrt(currentLatDist * currentLatDist + currentLngDist * currentLngDist);
+    
+    progress = totalDist > 0 ? Math.min(Math.round((currentDist / totalDist) * 100), 100) : 0;
+  }
 
   // Center map slightly offset to fit both points
   const centerPos = [

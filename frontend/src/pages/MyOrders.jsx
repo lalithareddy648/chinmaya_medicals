@@ -15,7 +15,12 @@ const MyOrders = () => {
     try {
       setLoading(true);
       const res = await api.get('/api/orders/myorders');
-      setOrders(res.data);
+      if (Array.isArray(res.data)) {
+        setOrders(res.data);
+      } else {
+        console.error('Invalid orders response format:', res.data);
+        setOrders([]);
+      }
       setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to retrieve your orders. Please try again.');
@@ -26,10 +31,15 @@ const MyOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-    // Auto-refresh every 60 seconds for live tracking
-    const interval = setInterval(fetchOrders, 60000);
-    return () => clearInterval(interval);
   }, [fetchOrders]);
+
+  useEffect(() => {
+    const hasActiveDelivery = orders.some(o => o.deliveryStatus === 'Out For Delivery');
+    const intervalTime = hasActiveDelivery ? 5000 : 60000;
+    
+    const interval = setInterval(fetchOrders, intervalTime);
+    return () => clearInterval(interval);
+  }, [orders, fetchOrders]);
 
   const getStatusColor = (status) => {
     const map = {
@@ -148,7 +158,11 @@ const MyOrders = () => {
                   
                   {/* Live GPS Tracking map logic */}
                   {(order.deliveryStatus === 'Out For Delivery' || order.deliveryStatus === 'Delivered') && isExpanded && (
-                    <LiveTrackingMap status={order.deliveryStatus} />
+                    <LiveTrackingMap 
+                      status={order.deliveryStatus} 
+                      customerCoordinates={order.customerCoordinates}
+                      driverCoordinates={order.driverCoordinates}
+                    />
                   )}
                 </div>
 
@@ -177,11 +191,25 @@ const MyOrders = () => {
                             borderRadius: '10px', border: '1px solid var(--border-glass)'
                           }}>
                             <div>
-                              <span style={{ fontWeight: '600', marginRight: '0.5rem' }}>{item.name}</span>
-                              <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{item.category}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: '600' }}>{item.name}</span>
+                                <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{item.category}</span>
+                                {item.discount > 0 && (
+                                  <span className="badge badge-success" style={{ fontSize: '0.6rem' }}>{item.discount}% OFF</span>
+                                )}
+                              </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
-                              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>₹{item.price} × {item.quantity}</div>
+                              <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                {item.discount > 0 ? (
+                                  <>
+                                    <span style={{ textDecoration: 'line-through', marginRight: '0.4rem' }}>₹{item.price}</span>
+                                    <span>₹{item.discountedPrice} × {item.quantity}</span>
+                                  </>
+                                ) : (
+                                  <span>₹{item.price} × {item.quantity}</span>
+                                )}
+                              </div>
                               <div style={{ fontWeight: '700', color: 'var(--color-primary)' }}>₹{item.total}</div>
                             </div>
                           </div>

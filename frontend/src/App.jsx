@@ -13,12 +13,14 @@ import MyOrders from './pages/MyOrders';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Background3D from './components/Background3D';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="app-container">
+          <Background3D />
           <Navbar />
           <main className="main-content">
             <Routes>
@@ -52,7 +54,7 @@ function App() {
               } />
             </Routes>
           </main>
-          <footer className="footer" style={{ borderTop: '1px solid var(--border-glass)', padding: '2rem 2rem', background: 'rgba(255, 255, 255, 0.4)', marginTop: '3rem', fontSize: '0.9rem', width: '100%' }}>
+          <footer className="footer" style={{ borderTop: '1px solid var(--border-glass)', padding: '2rem 2rem', background: 'var(--bg-card)', marginTop: '3rem', fontSize: '0.9rem', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem', maxWidth: '1280px', margin: '0 auto' }}>
               <div>
                 <h4 style={{ color: 'var(--color-primary)', marginBottom: '0.75rem' }}>Chinmaya Medicals 🏥</h4>

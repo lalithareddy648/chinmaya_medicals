@@ -7,31 +7,6 @@ const getPopulatedCart = async (userId) => {
     cart = await Carts.create({ userId, items: [] });
   }
 
-  const populatedItems = [];
-  let itemsPrice = 0;
-  let hasPrescriptionRequiredItems = false;
-
-  for (const item of cart.items) {
-    const medicine = await Medicines.findById(item.medicineId);
-    if (medicine) {
-      const lineTotal = medicine.price * item.quantity;
-      itemsPrice += lineTotal;
-      if (medicine.needsPrescription) {
-        hasPrescriptionRequiredItems = true;
-      }
-      populatedItems.push({
-        medicineId: item.medicineId,
-        name: medicine.name,
-        category: medicine.category,
-        price: medicine.price,
-        stock: medicine.stock,
-        needsPrescription: medicine.needsPrescription,
-        quantity: item.quantity,
-        total: lineTotal
-      });
-    }
-  }
-
   let discountPct = 15;
   try {
     const settings = await Settings.findOne();
@@ -42,15 +17,53 @@ const getPopulatedCart = async (userId) => {
     console.error('Error loading discount setting:', err);
   }
 
-  const discount = Math.round(itemsPrice * (discountPct / 100));
-  const totalPrice = itemsPrice - discount;
+  const populatedItems = [];
+  let itemsPrice = 0;
+  let totalDiscount = 0;
+  let totalPrice = 0;
+  let hasPrescriptionRequiredItems = false;
+
+  for (const item of cart.items) {
+    const medicine = await Medicines.findById(item.medicineId);
+    if (medicine) {
+      const itemDiscountPct = (medicine.discount !== undefined && medicine.discount > 0)
+        ? Number(medicine.discount)
+        : discountPct;
+
+      const unitDiscount = Math.round(medicine.price * (itemDiscountPct / 100));
+      const discountedUnitPrice = medicine.price - unitDiscount;
+      const lineOriginalTotal = medicine.price * item.quantity;
+      const lineDiscount = unitDiscount * item.quantity;
+      const lineTotal = discountedUnitPrice * item.quantity;
+
+      itemsPrice += lineOriginalTotal;
+      totalDiscount += lineDiscount;
+      totalPrice += lineTotal;
+
+      if (medicine.needsPrescription) {
+        hasPrescriptionRequiredItems = true;
+      }
+      populatedItems.push({
+        medicineId: item.medicineId,
+        name: medicine.name,
+        category: medicine.category,
+        price: medicine.price, // Base/MRP
+        discount: itemDiscountPct,
+        discountedPrice: discountedUnitPrice,
+        stock: medicine.stock,
+        needsPrescription: medicine.needsPrescription,
+        quantity: item.quantity,
+        total: lineTotal
+      });
+    }
+  }
 
   return {
     _id: cart._id,
     userId: cart.userId,
     items: populatedItems,
     itemsPrice,
-    discount,
+    discount: totalDiscount,
     totalPrice,
     hasPrescriptionRequiredItems
   };
