@@ -50,7 +50,7 @@ const Background3D = () => {
   // Generate random items
   const items = useMemo(() => {
     const array = [];
-    const colors = ['#00f2fe', '#4facfe', '#10b981', '#f59e0b', '#ffffff'];
+    const colors = ['#12b76a', '#039855', '#a6f4c5', '#f8faf9', '#ffffff'];
     const types = ['pill', 'bottle', 'tablet'];
     
     for (let i = 0; i < 40; i++) {
@@ -77,12 +77,12 @@ const Background3D = () => {
       height: '100vh',
       zIndex: -1, // Ensure it stays behind all content
       pointerEvents: 'none', // Don't block clicks
-      background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' // Fallback background
+      background: 'linear-gradient(135deg, #f8faf9 0%, #eef2f0 100%)' // Fallback background
     }}>
       <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[10, 10, 5]} intensity={1} color="#ffffff" />
-        <pointLight position={[-10, -10, -5]} intensity={0.5} color="#00f2fe" />
+        <pointLight position={[-10, -10, -5]} intensity={0.5} color="#a6f4c5" />
         
         {items.map((item) => (
           <FloatingMedicine 
