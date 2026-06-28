@@ -4,6 +4,7 @@
   "description": "Full Stack Online Medical Store (Chinmaya Medicals)",
   "type": "module",
   "scripts": {
+    "start": "npm start --prefix backend",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "backend": "npm run dev --prefix backend",
     "frontend": "npm run dev --prefix frontend",
