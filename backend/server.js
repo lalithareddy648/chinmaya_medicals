@@ -12,6 +12,8 @@ import { getMedicines, getMedicineById, createMedicine, updateMedicine, deleteMe
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from './controllers/cartController.js';
 import { placeOrder, getMyOrders, getOrderById, getAllOrders, updateOrderStatus } from './controllers/orderController.js';
 import { getSettings, updateSettings } from './controllers/settingsController.js';
+import { handleAgentChat, readPrescription } from './controllers/agentController.js';
+import { initializeDB } from './config/db.js';
 
 // Middleware
 import { protect, admin } from './middleware/authMiddleware.js';
@@ -101,6 +103,10 @@ app.put('/api/orders/:id/status', protect, admin, updateOrderStatus);
 app.get('/api/settings', protect, getSettings);
 app.put('/api/settings', protect, admin, updateSettings);
 
+// Agent Routes
+app.post('/api/agent/chat', handleAgentChat);
+app.post('/api/agent/read-prescription', protect, upload.single('prescriptionImage'), readPrescription);
+
 // Prescription Upload Route
 app.post('/api/upload', protect, upload.single('prescription'), (req, res) => {
   if (!req.file) {
@@ -108,6 +114,18 @@ app.post('/api/upload', protect, upload.single('prescription'), (req, res) => {
   }
   res.json({
     message: 'Prescription uploaded successfully',
+    filePath: `/uploads/${req.file.filename}`
+  });
+});
+
+// Generic Image Upload Route
+app.post('/api/upload/image', protect, admin, upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  // Format the path properly for URLs
+  res.json({
+    message: 'Image uploaded successfully',
     filePath: `/uploads/${req.file.filename}`
   });
 });
@@ -128,8 +146,10 @@ app.use((err, req, res, next) => {
 });
 
 if (!process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}...`);
+  initializeDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}...`);
+    });
   });
 }
 

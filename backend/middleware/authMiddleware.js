@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { Users } from '../config/db.js';
+import { pool } from '../config/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chinmayamedicalssecretkey12345!';
 
@@ -14,17 +14,19 @@ export const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
 
-      const user = await Users.findById(decoded.id);
-      if (!user) {
+      const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
+      if (userRes.rows.length === 0) {
         return res.status(401).json({ message: 'User not found in system' });
       }
 
+      const user = userRes.rows[0];
+
       // Append user to request object
       req.user = {
-        _id: user._id,
+        _id: user.id,
         name: user.name,
         email: user.email,
-        isAdmin: user.isAdmin
+        isAdmin: user.is_admin
       };
 
       next();

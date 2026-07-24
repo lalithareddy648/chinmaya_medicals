@@ -2,7 +2,7 @@
   {
     "_id": "b1owegsng",
     "createdAt": "2026-06-10T06:04:32.302Z",
-    "updatedAt": "2026-06-24T14:49:29.969Z",
+    "updatedAt": "2026-07-08T17:35:37.564Z",
     "name": "Reddy Lalitha",
     "email": "lalithareddy648@gmail.com",
     "password": "$2a$10$8KCRsZ7CTJXQJH/GXJJF4Ou6n3enCY0mNb4rZH/esUzhAb6oH6Fu.",
@@ -54,6 +54,21 @@
       "city": "Narasaraopet",
       "zipCode": "522601",
       "phone": "+919999999999"
+    }
+  },
+  {
+    "_id": "6berl12l8",
+    "createdAt": "2026-07-20T08:35:12.560Z",
+    "updatedAt": "2026-07-20T08:36:33.407Z",
+    "name": "Moksha",
+    "email": "jajam.mokshagna@gmail.com",
+    "password": "$2a$10$76M17b0JA8ZmCFbyRMwcLOrFGQCGs7MJoxTwhUNxJgMozjxw6.Vja",
+    "isAdmin": false,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "9398046853"
     }
   }
 ]

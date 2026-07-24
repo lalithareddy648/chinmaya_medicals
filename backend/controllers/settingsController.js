@@ -1,16 +1,18 @@
-import { Settings } from '../config/db.js';
+import { pool } from '../config/db.js';
 
 // Get settings
 export const getSettings = async (req, res) => {
   try {
-    let settings = await Settings.findOne();
-    if (!settings) {
+    let settingsRes = await pool.query('SELECT * FROM settings LIMIT 1');
+    if (settingsRes.rows.length === 0) {
       // Create default settings if they don't exist
-      settings = await Settings.create({
-        discountPercentage: 15
-      });
+      const id = Math.random().toString(36).substring(2, 11);
+      await pool.query('INSERT INTO settings (id, discount_percentage) VALUES ($1, $2)', [id, 15]);
+      res.json({ _id: id, discountPercentage: 15 });
+    } else {
+      const row = settingsRes.rows[0];
+      res.json({ _id: row.id, discountPercentage: Number(row.discount_percentage) });
     }
-    res.json(settings);
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -26,17 +28,16 @@ export const updateSettings = async (req, res) => {
   }
 
   try {
-    let settings = await Settings.findOne();
-    if (!settings) {
-      settings = await Settings.create({
-        discountPercentage: Number(discountPercentage)
-      });
+    let settingsRes = await pool.query('SELECT * FROM settings LIMIT 1');
+    if (settingsRes.rows.length === 0) {
+      const id = Math.random().toString(36).substring(2, 11);
+      await pool.query('INSERT INTO settings (id, discount_percentage) VALUES ($1, $2)', [id, Number(discountPercentage)]);
+      res.json({ _id: id, discountPercentage: Number(discountPercentage) });
     } else {
-      settings = await Settings.findByIdAndUpdate(settings._id, {
-        discountPercentage: Number(discountPercentage)
-      });
+      const row = settingsRes.rows[0];
+      await pool.query('UPDATE settings SET discount_percentage = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [Number(discountPercentage), row.id]);
+      res.json({ _id: row.id, discountPercentage: Number(discountPercentage) });
     }
-    res.json(settings);
   } catch (error) {
     console.error('Update settings error:', error);
     res.status(500).json({ message: 'Server error' });

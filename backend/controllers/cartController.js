@@ -1,17 +1,22 @@
-import { Carts, Medicines, Settings } from '../config/db.js';
+import { pool } from '../config/db.js';
 
 // Helper to populate and calculate cart details
 const getPopulatedCart = async (userId) => {
-  let cart = await Carts.findOne({ userId });
-  if (!cart) {
-    cart = await Carts.create({ userId, items: [] });
+  let cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [userId]);
+  let cart;
+  if (cartRes.rows.length === 0) {
+    const id = Math.random().toString(36).substring(2, 11);
+    await pool.query('INSERT INTO carts (id, user_id, items) VALUES ($1, $2, $3)', [id, userId, JSON.stringify([])]);
+    cart = { id, user_id: userId, items: [] };
+  } else {
+    cart = cartRes.rows[0];
   }
 
   let discountPct = 15;
   try {
-    const settings = await Settings.findOne();
-    if (settings && settings.discountPercentage !== undefined) {
-      discountPct = settings.discountPercentage;
+    const settingsRes = await pool.query('SELECT * FROM settings LIMIT 1');
+    if (settingsRes.rows.length > 0 && settingsRes.rows[0].discount_percentage !== undefined) {
+      discountPct = Number(settingsRes.rows[0].discount_percentage);
     }
   } catch (err) {
     console.error('Error loading discount setting:', err);
@@ -24,15 +29,17 @@ const getPopulatedCart = async (userId) => {
   let hasPrescriptionRequiredItems = false;
 
   for (const item of cart.items) {
-    const medicine = await Medicines.findById(item.medicineId);
-    if (medicine) {
-      const itemDiscountPct = (medicine.discount !== undefined && medicine.discount > 0)
-        ? Number(medicine.discount)
-        : discountPct;
+    const medRes = await pool.query('SELECT * FROM medicines WHERE id = $1', [item.medicineId]);
+    if (medRes.rows.length > 0) {
+      const medicine = medRes.rows[0];
+      const medPrice = Number(medicine.price);
+      const medDiscount = Number(medicine.discount);
 
-      const unitDiscount = Math.round(medicine.price * (itemDiscountPct / 100));
-      const discountedUnitPrice = medicine.price - unitDiscount;
-      const lineOriginalTotal = medicine.price * item.quantity;
+      const itemDiscountPct = (medDiscount > 0) ? medDiscount : discountPct;
+
+      const unitDiscount = Math.round(medPrice * (itemDiscountPct / 100));
+      const discountedUnitPrice = medPrice - unitDiscount;
+      const lineOriginalTotal = medPrice * item.quantity;
       const lineDiscount = unitDiscount * item.quantity;
       const lineTotal = discountedUnitPrice * item.quantity;
 
@@ -40,18 +47,20 @@ const getPopulatedCart = async (userId) => {
       totalDiscount += lineDiscount;
       totalPrice += lineTotal;
 
-      if (medicine.needsPrescription) {
+      if (medicine.needs_prescription) {
         hasPrescriptionRequiredItems = true;
       }
       populatedItems.push({
         medicineId: item.medicineId,
         name: medicine.name,
         category: medicine.category,
-        price: medicine.price, // Base/MRP
+        price: medPrice, // Base/MRP
         discount: itemDiscountPct,
         discountedPrice: discountedUnitPrice,
         stock: medicine.stock,
-        needsPrescription: medicine.needsPrescription,
+        needsPrescription: medicine.needs_prescription,
+        manufacturer: medicine.manufacturer,
+        expiryDate: medicine.expiry_date,
         quantity: item.quantity,
         total: lineTotal
       });
@@ -59,8 +68,8 @@ const getPopulatedCart = async (userId) => {
   }
 
   return {
-    _id: cart._id,
-    userId: cart.userId,
+    _id: cart.id,
+    userId: cart.user_id,
     items: populatedItems,
     itemsPrice,
     discount: totalDiscount,
@@ -94,14 +103,20 @@ export const addToCart = async (req, res) => {
 
   try {
     // Check medicine stock
-    const medicine = await Medicines.findById(medicineId);
-    if (!medicine) {
+    const medRes = await pool.query('SELECT * FROM medicines WHERE id = $1', [medicineId]);
+    if (medRes.rows.length === 0) {
       return res.status(404).json({ message: 'Medicine not found' });
     }
+    const medicine = medRes.rows[0];
 
-    let cart = await Carts.findOne({ userId: req.user._id });
-    if (!cart) {
-      cart = await Carts.create({ userId: req.user._id, items: [] });
+    let cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
+    let cart;
+    if (cartRes.rows.length === 0) {
+      const id = Math.random().toString(36).substring(2, 11);
+      await pool.query('INSERT INTO carts (id, user_id, items) VALUES ($1, $2, $3)', [id, req.user._id, JSON.stringify([])]);
+      cart = { id, items: [] };
+    } else {
+      cart = cartRes.rows[0];
     }
 
     const itemIndex = cart.items.findIndex(item => String(item.medicineId) === String(medicineId));
@@ -121,7 +136,7 @@ export const addToCart = async (req, res) => {
       cart.items.push({ medicineId, quantity: Number(quantity) });
     }
 
-    await Carts.findByIdAndUpdate(cart._id, { items: cart.items });
+    await pool.query('UPDATE carts SET items = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify(cart.items), cart.id]);
 
     const cartDetails = await getPopulatedCart(req.user._id);
     res.json(cartDetails);
@@ -142,38 +157,41 @@ export const updateCartItem = async (req, res) => {
   }
 
   try {
-    const medicine = await Medicines.findById(medicineId);
-    if (!medicine) {
+    const medRes = await pool.query('SELECT * FROM medicines WHERE id = $1', [medicineId]);
+    if (medRes.rows.length === 0) {
       return res.status(404).json({ message: 'Medicine not found' });
     }
+    const medicine = medRes.rows[0];
 
-    if (Number(quantity) > medicine.stock) {
-      return res.status(400).json({ message: `Insufficient stock. Only ${medicine.stock} left.` });
-    }
-
-    const cart = await Carts.findOne({ userId: req.user._id });
-    if (!cart) {
+    const cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
+    if (cartRes.rows.length === 0) {
       return res.status(404).json({ message: 'Cart not found' });
     }
+    const cart = cartRes.rows[0];
 
     const itemIndex = cart.items.findIndex(item => String(item.medicineId) === String(medicineId));
 
-    if (itemIndex > -1) {
-      if (Number(quantity) <= 0) {
-        // Remove item if quantity is 0 or less
-        cart.items.splice(itemIndex, 1);
-      } else {
-        cart.items[itemIndex].quantity = Number(quantity);
-      }
-      await Carts.findByIdAndUpdate(cart._id, { items: cart.items });
-    } else {
-      return res.status(404).json({ message: 'Item not found in cart' });
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: 'Item not in cart' });
     }
+
+    const newQty = Number(quantity);
+
+    if (newQty <= 0) {
+      cart.items.splice(itemIndex, 1);
+    } else {
+      if (newQty > medicine.stock) {
+        return res.status(400).json({ message: `Cannot update. Insufficient stock. Only ${medicine.stock} left.` });
+      }
+      cart.items[itemIndex].quantity = newQty;
+    }
+
+    await pool.query('UPDATE carts SET items = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify(cart.items), cart.id]);
 
     const cartDetails = await getPopulatedCart(req.user._id);
     res.json(cartDetails);
   } catch (error) {
-    console.error('Update cart error:', error);
+    console.error('Update cart item error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -182,14 +200,15 @@ export const updateCartItem = async (req, res) => {
 // @route   DELETE /api/cart/:medicineId
 // @access  Private
 export const removeCartItem = async (req, res) => {
-  try {
-    const cart = await Carts.findOne({ userId: req.user._id });
-    if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
-    }
+  const { medicineId } = req.params;
 
-    cart.items = cart.items.filter(item => String(item.medicineId) !== String(req.params.medicineId));
-    await Carts.findByIdAndUpdate(cart._id, { items: cart.items });
+  try {
+    const cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
+    if (cartRes.rows.length > 0) {
+      const cart = cartRes.rows[0];
+      const newItems = cart.items.filter(item => String(item.medicineId) !== String(medicineId));
+      await pool.query('UPDATE carts SET items = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify(newItems), cart.id]);
+    }
 
     const cartDetails = await getPopulatedCart(req.user._id);
     res.json(cartDetails);
@@ -199,16 +218,17 @@ export const removeCartItem = async (req, res) => {
   }
 };
 
-// @desc    Clear user cart
+// @desc    Clear entire cart
 // @route   DELETE /api/cart
 // @access  Private
 export const clearCart = async (req, res) => {
   try {
-    const cart = await Carts.findOne({ userId: req.user._id });
-    if (cart) {
-      await Carts.findByIdAndUpdate(cart._id, { items: [] });
+    const cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
+    if (cartRes.rows.length > 0) {
+      await pool.query('UPDATE carts SET items = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify([]), cartRes.rows[0].id]);
     }
-    res.json({ message: 'Cart cleared successfully' });
+    const cartDetails = await getPopulatedCart(req.user._id);
+    res.json(cartDetails);
   } catch (error) {
     console.error('Clear cart error:', error);
     res.status(500).json({ message: 'Server error' });

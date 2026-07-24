@@ -14,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Background3D from './components/Background3D';
+import MedicalAgent from './components/MedicalAgent';
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
                 </ProtectedRoute>
               } />
             </Routes>
+            <MedicalAgent />
           </main>
           <footer className="footer" style={{ borderTop: '1px solid var(--border-glass)', padding: '2rem 2rem', background: 'var(--bg-card)', marginTop: '3rem', fontSize: '0.9rem', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem', maxWidth: '1280px', margin: '0 auto' }}>

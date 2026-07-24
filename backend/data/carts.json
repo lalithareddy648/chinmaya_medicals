@@ -2,9 +2,14 @@
   {
     "_id": "45n24d802",
     "createdAt": "2026-06-10T06:04:33.339Z",
-    "updatedAt": "2026-06-24T14:49:29.983Z",
+    "updatedAt": "2026-07-08T17:41:56.281Z",
     "userId": "b1owegsng",
-    "items": []
+    "items": [
+      {
+        "medicineId": "med1",
+        "quantity": 1
+      }
+    ]
   },
   {
     "_id": "sdnoqhgxc",
@@ -32,6 +37,13 @@
     "createdAt": "2026-06-12T12:40:33.149Z",
     "updatedAt": "2026-06-12T12:40:33.259Z",
     "userId": "3ntnp1x14",
+    "items": []
+  },
+  {
+    "_id": "1a5mayqpg",
+    "createdAt": "2026-07-20T08:35:12.964Z",
+    "updatedAt": "2026-07-20T08:36:34.487Z",
+    "userId": "6berl12l8",
     "items": []
   }
 ]

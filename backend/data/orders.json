@@ -360,5 +360,89 @@
       "lat": 16.248690179463168,
       "lng": 80.03279757234588
     }
+  },
+  {
+    "_id": "qzqabpxx8",
+    "createdAt": "2026-07-08T17:35:37.640Z",
+    "updatedAt": "2026-07-08T17:40:53.908Z",
+    "userId": "b1owegsng",
+    "userName": "Reddy Lalitha",
+    "userEmail": "lalithareddy648@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "discount": 10,
+        "discountedPrice": 31,
+        "quantity": 1,
+        "total": 31
+      }
+    ],
+    "itemsPrice": 35,
+    "discount": 4,
+    "deliveryType": "Local",
+    "deliveryCharge": 0,
+    "totalPrice": 31,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Guntur",
+      "zipCode": "522601",
+      "phone": "+919398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Delivered",
+    "customerCoordinates": {
+      "lat": 16.246949506304023,
+      "lng": 80.0673790115689
+    },
+    "driverCoordinates": {
+      "lat": 16.246949506304023,
+      "lng": 80.0673790115689
+    }
+  },
+  {
+    "_id": "7boai660b",
+    "createdAt": "2026-07-20T08:36:34.481Z",
+    "updatedAt": "2026-07-20T08:36:34.481Z",
+    "userId": "6berl12l8",
+    "userName": "Moksha",
+    "userEmail": "jajam.mokshagna@gmail.com",
+    "items": [
+      {
+        "medicineId": "med1",
+        "name": "Paracetamol 650mg (Dolo)",
+        "category": "Tablet",
+        "price": 35,
+        "discount": 10,
+        "discountedPrice": 31,
+        "quantity": 1,
+        "total": 31
+      }
+    ],
+    "itemsPrice": 35,
+    "discount": 4,
+    "deliveryType": "Local",
+    "deliveryCharge": 0,
+    "totalPrice": 31,
+    "shippingAddress": {
+      "address": "Prakash Nagar",
+      "city": "Narasaraopet",
+      "zipCode": "522601",
+      "phone": "9398046853"
+    },
+    "paymentMethod": "Cash on Delivery",
+    "prescription": null,
+    "deliveryStatus": "Placed",
+    "customerCoordinates": {
+      "lat": 16.236537859516343,
+      "lng": 80.06651792711719
+    },
+    "driverCoordinates": {
+      "lat": 16.2361,
+      "lng": 80.0519
+    }
   }
 ]

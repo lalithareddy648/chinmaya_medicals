@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Users } from '../config/db.js';
+import { pool } from '../config/db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chinmayamedicalssecretkey12345!';
 
@@ -19,8 +19,8 @@ export const registerUser = async (req, res) => {
   }
 
   try {
-    const userExists = await Users.findOne({ email: email.toLowerCase() });
-    if (userExists) {
+    const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (userRes.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
@@ -29,28 +29,24 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Make the first user or email 'admin@chinmaya.com' an admin
-    const allUsers = await Users.find({});
-    const isFirstUser = allUsers.length === 0;
+    const allUsersRes = await pool.query('SELECT COUNT(*) FROM users');
+    const isFirstUser = parseInt(allUsersRes.rows[0].count) === 0;
     const isAdmin = isFirstUser || email.toLowerCase() === 'admin@chinmaya.com';
 
-    const user = await Users.create({
+    const id = Math.random().toString(36).substring(2, 11);
+    
+    await pool.query(
+      'INSERT INTO users (id, name, email, password, is_admin) VALUES ($1, $2, $3, $4, $5)',
+      [id, name, email.toLowerCase(), hashedPassword, isAdmin]
+    );
+
+    res.status(201).json({
+      _id: id,
       name,
       email: email.toLowerCase(),
-      password: hashedPassword,
-      isAdmin
+      isAdmin,
+      token: generateToken(id)
     });
-
-    if (user) {
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        token: generateToken(user._id)
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid user data' });
-    }
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -68,15 +64,20 @@ export const loginUser = async (req, res) => {
   }
 
   try {
-    const user = await Users.findOne({ email: email.toLowerCase() });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        token: generateToken(user._id)
-      });
+    const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (userRes.rows.length > 0) {
+      const user = userRes.rows[0];
+      if (await bcrypt.compare(password, user.password)) {
+        res.json({
+          _id: user.id,
+          name: user.name,
+          email: user.email,
+          isAdmin: user.is_admin,
+          token: generateToken(user.id)
+        });
+      } else {
+        res.status(401).json({ message: 'Invalid email or password' });
+      }
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -91,14 +92,15 @@ export const loginUser = async (req, res) => {
 // @access  Private
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await Users.findById(req.user._id);
-    if (user) {
+    const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [req.user._id]);
+    if (userRes.rows.length > 0) {
+      const user = userRes.rows[0];
       res.json({
-        _id: user._id,
+        _id: user.id,
         name: user.name,
         email: user.email,
-        isAdmin: user.isAdmin,
-        shippingAddress: user.shippingAddress || null
+        isAdmin: user.is_admin,
+        shippingAddress: null // Can be added later if schema is updated
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -120,16 +122,18 @@ export const resetPassword = async (req, res) => {
   }
 
   try {
-    const user = await Users.findOne({ email: email.toLowerCase() });
-    if (!user) {
+    const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (userRes.rows.length === 0) {
       return res.status(404).json({ message: 'No account found with this email' });
     }
+
+    const user = userRes.rows[0];
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await Users.findByIdAndUpdate(user._id, { password: hashedPassword });
+    await pool.query('UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [hashedPassword, user.id]);
     res.json({ message: 'Password has been reset successfully! ✓' });
   } catch (error) {
     console.error('Reset password error:', error);

@@ -101,40 +101,41 @@ const MedicineDetails = () => {
 
       <div className="glass-panel details-container">
         {/* Visual Graphic representation */}
-        <div className="details-visual">
-          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="detailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#00f2fe" />
-                <stop offset="100%" stopColor="#4facfe" />
-              </linearGradient>
-            </defs>
-            {medicine.category === 'Tablet' ? (
-              // Draw capsule/tablet
-              <g transform="rotate(-45 50 50)">
-                <rect x="35" y="25" width="30" height="50" rx="15" fill="url(#detailGrad)" />
-                <rect x="35" y="25" width="30" height="25" rx="15" fill="rgba(255,255,255,0.25)" />
-                <line x1="35" y1="50" x2="65" y2="50" stroke="var(--bg-secondary)" strokeWidth="2" />
-              </g>
-            ) : medicine.category === 'Syrup' ? (
-              // Draw bottle
-              <g>
-                <path d="M40,35 L60,35 L60,45 L65,45 L65,85 L35,85 L35,45 L40,45 Z" fill="url(#detailGrad)" />
-                <rect x="43" y="25" width="14" height="10" fill="rgba(255,255,255,0.3)" />
-                <rect x="42" y="55" width="16" height="20" fill="rgba(255,255,255,0.7)" />
-                <circle cx="50" cy="65" r="3" fill="var(--color-danger)" />
-              </g>
-            ) : (
-              // Draw syringe/injection
-              <g transform="rotate(45 50 50)">
-                <rect x="45" y="10" width="10" height="50" rx="2" fill="rgba(255,255,255,0.3)" stroke="url(#detailGrad)" strokeWidth="2" />
-                <line x1="50" y1="60" x2="50" y2="85" stroke="url(#detailGrad)" strokeWidth="3" />
-                <rect x="48" y="20" width="4" height="30" fill="url(#detailGrad)" />
-                <rect x="40" y="85" width="20" height="4" fill="rgba(255,255,255,0.5)" />
-              </g>
-            )}
-          </svg>
-          <span className="badge badge-info">{medicine.category}</span>
+        <div className="details-visual" style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          {medicine.image ? (
+            <img src={medicine.image} alt={medicine.name} style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '300px' }} />
+          ) : (
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ maxHeight: '200px' }}>
+              <defs>
+                <linearGradient id="detailGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00f2fe" />
+                  <stop offset="100%" stopColor="#4facfe" />
+                </linearGradient>
+              </defs>
+              {medicine.category === 'Tablet' ? (
+                <g transform="rotate(-45 50 50)">
+                  <rect x="35" y="25" width="30" height="50" rx="15" fill="url(#detailGrad)" />
+                  <rect x="35" y="25" width="30" height="25" rx="15" fill="rgba(255,255,255,0.25)" />
+                  <line x1="35" y1="50" x2="65" y2="50" stroke="var(--bg-secondary)" strokeWidth="2" />
+                </g>
+              ) : medicine.category === 'Syrup' ? (
+                <g>
+                  <path d="M40,35 L60,35 L60,45 L65,45 L65,85 L35,85 L35,45 L40,45 Z" fill="url(#detailGrad)" />
+                  <rect x="43" y="25" width="14" height="10" fill="rgba(255,255,255,0.3)" />
+                  <rect x="42" y="55" width="16" height="20" fill="rgba(255,255,255,0.7)" />
+                  <circle cx="50" cy="65" r="3" fill="var(--color-danger)" />
+                </g>
+              ) : (
+                <g transform="rotate(45 50 50)">
+                  <rect x="45" y="10" width="10" height="50" rx="2" fill="rgba(255,255,255,0.3)" stroke="url(#detailGrad)" strokeWidth="2" />
+                  <line x1="50" y1="60" x2="50" y2="85" stroke="url(#detailGrad)" strokeWidth="3" />
+                  <rect x="48" y="20" width="4" height="30" fill="url(#detailGrad)" />
+                  <rect x="40" y="85" width="20" height="4" fill="rgba(255,255,255,0.5)" />
+                </g>
+              )}
+            </svg>
+          )}
+          <span className="badge badge-info" style={{ marginTop: '1rem' }}>{medicine.category}</span>
         </div>
 
         {/* Detailed specs & details */}
@@ -173,10 +174,18 @@ const MedicineDetails = () => {
                 )}
               </div>
             </div>
-            <div className="spec-item" style={{ gridColumn: discPct > 0 ? 'auto' : 'span 2' }}>
+            <div className="spec-item">
               <div className="spec-label">Recommended Dosage</div>
               <div className="spec-value">{medicine.dosage || 'Take as directed by doctor'}</div>
             </div>
+            {medicine.expiryDate && (
+              <div className="spec-item">
+                <div className="spec-label">Expiry Date</div>
+                <div className="spec-value" style={{ color: 'var(--color-danger)' }}>
+                  {medicine.expiryDate}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="purchase-actions">

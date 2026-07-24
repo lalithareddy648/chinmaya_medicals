@@ -194,9 +194,17 @@ const Home = () => {
                     }}>Rx</div>
                   )}
 
-                  <div className="medicine-card-header">
+                  <div className="medicine-card-header" style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', zIndex: 2 }}>
                     <span className="badge badge-info">{CATEGORY_ICONS[med.category]} {med.category}</span>
                     <span className={`badge ${stockInfo.cls}`}>{stockInfo.label}</span>
+                  </div>
+
+                  <div style={{ height: '180px', width: '100%', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', overflow: 'hidden', borderRadius: '12px' }}>
+                    {med.image ? (
+                      <img src={med.image} alt={med.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '4rem', opacity: 0.2 }}>{CATEGORY_ICONS[med.category]}</span>
+                    )}
                   </div>
 
                   {/* Stock progress bar */}
@@ -219,8 +227,13 @@ const Home = () => {
                     <h3 className="medicine-name" style={{ transition: 'color 0.2s' }}>{med.name}</h3>
                   </Link>
                   {med.manufacturer && (
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>
                       🏭 {med.manufacturer}
+                    </div>
+                  )}
+                  {med.expiryDate && (
+                    <div style={{ fontSize: '0.78rem', color: 'var(--color-danger)', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      ⏳ Exp: {med.expiryDate}
                     </div>
                   )}
                   <p className="medicine-desc">{med.description}</p>

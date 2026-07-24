@@ -1,143 +1,107 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pkg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const { Pool } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_DIR = process.env.VERCEL
-  ? path.join('/tmp', 'data')
-  : path.join(__dirname, '..', 'data');
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const SCHEMA_FILE = path.join(__dirname, 'schema.sql');
 
-// Ensure data directory exists
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
+});
+
 const initializeDB = async () => {
   try {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-    if (process.env.VERCEL) {
-      const ORIGINAL_DATA_DIR = path.join(__dirname, '..', 'data');
-      const files = ['users.json', 'medicines.json', 'orders.json', 'carts.json', 'settings.json'];
-      for (const file of files) {
-        const targetPath = path.join(DATA_DIR, file);
-        const sourcePath = path.join(ORIGINAL_DATA_DIR, file);
-        
-        const exists = await fs.access(targetPath).then(() => true).catch(() => false);
-        if (!exists) {
-          const sourceExists = await fs.access(sourcePath).then(() => true).catch(() => false);
-          if (sourceExists) {
-            await fs.copyFile(sourcePath, targetPath);
-            console.log(`Seeded ${file} to /tmp/data`);
-          } else {
-            await fs.writeFile(targetPath, '[]', 'utf-8');
+    // 1. Run schema.sql
+    const schemaSql = await fs.readFile(SCHEMA_FILE, 'utf-8');
+    await pool.query(schemaSql);
+    
+    // 2. Seed data if tables are empty
+    const tables = ['users', 'medicines', 'orders', 'carts', 'settings'];
+    
+    for (const table of tables) {
+      const res = await pool.query(`SELECT COUNT(*) FROM ${table}`);
+      if (parseInt(res.rows[0].count) === 0) {
+        try {
+          const filePath = path.join(DATA_DIR, `${table}.json`);
+          const fileExists = await fs.access(filePath).then(() => true).catch(() => false);
+          
+          if (fileExists) {
+            const content = await fs.readFile(filePath, 'utf-8');
+            const data = JSON.parse(content || '[]');
+            
+            for (const item of data) {
+              const { _id, createdAt, updatedAt, ...rest } = item;
+              const id = _id || Math.random().toString(36).substring(2, 11);
+              const crAt = createdAt || new Date().toISOString();
+              const upAt = updatedAt || new Date().toISOString();
+              
+              if (table === 'users') {
+                await pool.query(
+                  `INSERT INTO users (id, name, email, password, is_admin, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                  [id, rest.name, rest.email, rest.password, rest.isAdmin || false, crAt, upAt]
+                );
+              } else if (table === 'medicines') {
+                await pool.query(
+                  `INSERT INTO medicines (id, name, category, description, price, discount, stock, needs_prescription, manufacturer, dosage, image, expiry_date, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+                  [
+                    id, rest.name, rest.category, rest.description, rest.price, rest.discount || 0, rest.stock || 0, 
+                    rest.needsPrescription || false, rest.manufacturer, rest.dosage, rest.image, rest.expiryDate, crAt, upAt
+                  ]
+                );
+              } else if (table === 'settings') {
+                await pool.query(
+                  `INSERT INTO settings (id, discount_percentage, created_at, updated_at) VALUES ($1, $2, $3, $4)`,
+                  [id, rest.discountPercentage || 0, crAt, upAt]
+                );
+              } else if (table === 'carts') {
+                await pool.query(
+                  `INSERT INTO carts (id, user_id, items, created_at, updated_at) VALUES ($1, $2, $3, $4, $5)`,
+                  [id, rest.userId || null, JSON.stringify(rest.items || []), crAt, upAt]
+                );
+              } else if (table === 'orders') {
+                await pool.query(
+                  `INSERT INTO orders (id, user_id, user_name, user_email, total_amount, shipping_address, payment_method, payment_status, delivery_status, prescription_url, customer_coordinates, driver_coordinates, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+                  [
+                    id, rest.userId || null, rest.userName, rest.userEmail, rest.totalAmount, 
+                    JSON.stringify(rest.shippingAddress || {}), rest.paymentMethod, rest.paymentStatus || 'Pending', 
+                    rest.deliveryStatus || 'Processing', rest.prescriptionUrl, JSON.stringify(rest.customerCoordinates || null), 
+                    JSON.stringify(rest.driverCoordinates || null), crAt, upAt
+                  ]
+                );
+
+                // Insert into order_items
+                if (rest.items && Array.isArray(rest.items)) {
+                  for (const orderItem of rest.items) {
+                    const orderItemId = Math.random().toString(36).substring(2, 11);
+                    await pool.query(
+                      `INSERT INTO order_items (id, order_id, medicine_id, name, category, price, discount, discounted_price, quantity, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                      [
+                        orderItemId, id, orderItem.medicineId, orderItem.name, orderItem.category, 
+                        orderItem.price, orderItem.discount, orderItem.discountedPrice, orderItem.quantity, orderItem.total
+                      ]
+                    );
+                  }
+                }
+              }
+            }
+            console.log(`Seeded ${table} from JSON to PostgreSQL (Relational)`);
           }
+        } catch (e) {
+          console.error(`Error seeding table ${table}:`, e);
         }
       }
     }
+    console.log('PostgreSQL database initialized');
   } catch (error) {
-    console.error('Error creating database directory:', error);
+    console.error('Error initializing PostgreSQL:', error);
   }
 };
 
-class FileCollection {
-  constructor(collectionName) {
-    this.filePath = path.join(DATA_DIR, `${collectionName}.json`);
-    this.data = [];
-    this.initialized = false;
-  }
-
-  async init() {
-    if (this.initialized) return;
-    await initializeDB();
-    try {
-      const fileExists = await fs.access(this.filePath).then(() => true).catch(() => false);
-      if (fileExists) {
-        const content = await fs.readFile(this.filePath, 'utf-8');
-        this.data = JSON.parse(content || '[]');
-      } else {
-        await fs.writeFile(this.filePath, '[]', 'utf-8');
-        this.data = [];
-      }
-    } catch (error) {
-      console.error(`Error loading database file ${this.filePath}:`, error);
-      this.data = [];
-    }
-    this.initialized = true;
-  }
-
-  async save() {
-    await this.init();
-    try {
-      await fs.writeFile(this.filePath, JSON.stringify(this.data, null, 2), 'utf-8');
-    } catch (error) {
-      console.error(`Error saving database file ${this.filePath}:`, error);
-    }
-  }
-
-  async find(query = {}) {
-    await this.init();
-    return this.data.filter(item => {
-      for (const key in query) {
-        // Support regular expression querying for search fields
-        if (query[key] && typeof query[key] === 'object' && query[key].$regex) {
-          const regex = new RegExp(query[key].$regex, query[key].$options || 'i');
-          if (!regex.test(item[key] || '')) return false;
-          continue;
-        }
-        if (item[key] !== query[key]) return false;
-      }
-      return true;
-    });
-  }
-
-  async findOne(query = {}) {
-    const results = await this.find(query);
-    return results[0] || null;
-  }
-
-  async findById(id) {
-    await this.init();
-    return this.data.find(item => String(item._id) === String(id)) || null;
-  }
-
-  async create(newItem) {
-    await this.init();
-    const doc = {
-      _id: Math.random().toString(36).substring(2, 11),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ...newItem
-    };
-    this.data.push(doc);
-    await this.save();
-    return doc;
-  }
-
-  async findByIdAndUpdate(id, updateData) {
-    await this.init();
-    const index = this.data.findIndex(item => String(item._id) === String(id));
-    if (index === -1) return null;
-
-    const currentItem = this.data[index];
-    const updatedItem = {
-      ...currentItem,
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
-    this.data[index] = updatedItem;
-    await this.save();
-    return updatedItem;
-  }
-
-  async findByIdAndDelete(id) {
-    await this.init();
-    const index = this.data.findIndex(item => String(item._id) === String(id));
-    if (index === -1) return false;
-    this.data.splice(index, 1);
-    await this.save();
-    return true;
-  }
-}
-
-export const Users = new FileCollection('users');
-export const Medicines = new FileCollection('medicines');
-export const Carts = new FileCollection('carts');
-export const Orders = new FileCollection('orders');
-export const Settings = new FileCollection('settings');
+export { initializeDB };

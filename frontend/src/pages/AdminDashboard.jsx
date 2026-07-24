@@ -25,7 +25,9 @@ const AdminDashboard = () => {
     stock: '',
     needsPrescription: false,
     manufacturer: '',
-    dosage: ''
+    dosage: '',
+    image: '',
+    expiryDate: ''
   });
 
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,9 @@ const AdminDashboard = () => {
       stock: '',
       needsPrescription: false,
       manufacturer: '',
-      dosage: ''
+      dosage: '',
+      image: '',
+      expiryDate: ''
     });
     setShowMedModal(true);
   };
@@ -144,9 +148,29 @@ const AdminDashboard = () => {
       stock: med.stock,
       needsPrescription: med.needsPrescription || false,
       manufacturer: med.manufacturer || '',
-      dosage: med.dosage || ''
+      dosage: med.dosage || '',
+      image: med.image || '',
+      expiryDate: med.expiryDate || ''
     });
     setShowMedModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+      const res = await api.post('/api/upload/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setMedForm(prev => ({ ...prev, image: res.data.filePath }));
+    } catch (err) {
+      console.error(err);
+      alert('Error uploading image');
+    }
   };
 
   const handleSaveMedicine = async (e) => {
@@ -422,8 +446,9 @@ const AdminDashboard = () => {
                         <th>Name</th>
                         <th>Category</th>
                         <th>Price</th>
-                        <th>Discount%</th>
+                        <th>Discount</th>
                         <th>Stock</th>
+                        <th>Mfg / Expiry</th>
                         <th>Prescription</th>
                         <th>Actions</th>
                       </tr>
@@ -445,6 +470,13 @@ const AdminDashboard = () => {
                             <span style={{ color: med.stock <= 0 ? 'var(--color-danger)' : med.stock < 15 ? 'var(--color-warning)' : 'inherit' }}>
                               {med.stock} units
                             </span>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              {med.manufacturer || '—'}
+                              <br />
+                              <span style={{ color: 'var(--color-danger)' }}>{med.expiryDate || '—'}</span>
+                            </div>
                           </td>
                           <td>
                             {med.needsPrescription ? (
@@ -627,6 +659,42 @@ const AdminDashboard = () => {
                     value={medForm.dosage}
                     onChange={handleMedFormChange}
                   />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Expiry Date</label>
+                  <input
+                    type="text"
+                    name="expiryDate"
+                    className="form-control"
+                    placeholder="e.g. MM/YYYY"
+                    value={medForm.expiryDate}
+                    onChange={handleMedFormChange}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Image URL (Real Photo)</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      name="image"
+                      className="form-control"
+                      placeholder="URL or Upload ->"
+                      value={medForm.image}
+                      onChange={handleMedFormChange}
+                    />
+                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0, padding: '0.4rem 0.5rem', whiteSpace: 'nowrap' }}>
+                      Upload
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={handleImageUpload} 
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
 

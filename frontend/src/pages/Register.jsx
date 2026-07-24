@@ -111,10 +111,12 @@ const Register = () => {
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: '1.1rem'
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                color: 'var(--color-primary)'
               }}
             >
-              {showPassword ? '👁️' : '🙈'}
+              {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
         </div>
@@ -142,10 +144,12 @@ const Register = () => {
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
-                fontSize: '1.1rem'
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                color: 'var(--color-primary)'
               }}
             >
-              {showConfirmPassword ? '👁️' : '🙈'}
+              {showConfirmPassword ? 'Hide' : 'Show'}
             </button>
           </div>
         </div>

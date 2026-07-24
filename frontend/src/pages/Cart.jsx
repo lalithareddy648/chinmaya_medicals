@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
@@ -12,6 +13,11 @@ const Cart = () => {
   const [prescriptionPath, setPrescriptionPath] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // AI Auto-Fill State
+  const [aiUploading, setAiUploading] = useState(false);
+  const [aiMessage, setAiMessage] = useState('');
+
   const [discountPercentage, setDiscountPercentage] = useState(15);
   const navigate = useNavigate();
 
@@ -92,6 +98,38 @@ const Cart = () => {
     }
   };
 
+  const handleAiUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setAiMessage('Invalid file type! Only JPG, JPEG, PNG, and PDF are allowed.');
+      return;
+    }
+
+    setAiMessage('');
+    setAiUploading(true);
+
+    const formData = new FormData();
+    formData.append('prescriptionImage', file);
+
+    try {
+      const res = await api.post('/api/agent/read-prescription', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setAiMessage(res.data.message);
+      // Refresh cart to show new items
+      fetchCart();
+      window.dispatchEvent(new Event('cart-updated'));
+    } catch (err) {
+      setAiMessage(err.response?.data?.error || 'AI analysis failed.');
+    } finally {
+      setAiUploading(false);
+      e.target.value = null; // reset input
+    }
+  };
+
   const handleCheckout = () => {
     if (cart.hasPrescriptionRequiredItems && !prescriptionPath) {
       setErrorMessage('Prescription file is required before you can check out.');
@@ -121,6 +159,38 @@ const Cart = () => {
         </div>
       )}
 
+      {/* AI Upload Banner */}
+      {!isCartEmpty && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)', border: '1px solid var(--border-neon)', padding: '1.5rem', borderRadius: '16px', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}
+        >
+          <div>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)' }}>
+              <span style={{ fontSize: '1.5rem' }}>✨</span> AI Auto-Fill
+            </h3>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Upload your doctor's prescription and our AI will automatically read it and add the right medicines to your cart.</p>
+          </div>
+          <div>
+            <input type="file" id="ai-prescription-input" style={{ display: 'none' }} onChange={handleAiUpload} accept=".jpg,.jpeg,.png,.pdf" disabled={aiUploading} />
+            <label htmlFor="ai-prescription-input" className="btn" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white', cursor: aiUploading ? 'wait' : 'pointer', opacity: aiUploading ? 0.7 : 1, border: 'none' }}>
+              {aiUploading ? 'Analyzing with AI...' : 'Upload Prescription'}
+            </label>
+          </div>
+        </motion.div>
+      )}
+
+      {aiMessage && (
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+          className={`badge ${aiMessage.includes('failed') || aiMessage.includes('Invalid') || aiMessage.includes('could not match') ? 'badge-danger' : 'badge-success'}`} 
+          style={{ display: 'block', width: '100%', padding: '1rem', marginBottom: '1.5rem', textTransform: 'none', borderRadius: '12px' }}
+        >
+          {aiMessage}
+        </motion.div>
+      )}
+
       {isCartEmpty ? (
         <div className="glass-panel" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
           <h2 style={{ marginBottom: '1rem' }}>Your Cart is Empty</h2>
@@ -131,47 +201,62 @@ const Cart = () => {
         <div className="cart-layout">
           {/* Cart Items List */}
           <div className="cart-items-list">
-            {cart.items.map((item) => {
-              return (
-                <div key={item.medicineId} className="glass-panel cart-item">
-                  <div className="cart-item-icon">
-                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="50" cy="50" r="45" fill="rgba(0, 242, 254, 0.08)" stroke="var(--color-primary)" strokeWidth="2" />
-                      <path d="M40,50 L60,50 M50,40 L50,60" stroke="var(--color-primary)" strokeWidth="6" strokeLinecap="round" />
-                    </svg>
-                  </div>
+            <AnimatePresence>
+              {cart.items.map((item) => {
+                return (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, x: -100 }}
+                    transition={{ duration: 0.3 }}
+                    key={item.medicineId} 
+                    className="glass-panel cart-item"
+                  >
+                    <div className="cart-item-icon">
+                      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" fill="rgba(0, 242, 254, 0.08)" stroke="var(--color-primary)" strokeWidth="2" />
+                        <path d="M40,50 L60,50 M50,40 L50,60" stroke="var(--color-primary)" strokeWidth="6" strokeLinecap="round" />
+                      </svg>
+                    </div>
 
-                  <div className="cart-item-info">
-                    <Link to={`/medicine/${item.medicineId}`}>
-                      <div className="item-name">{item.name}</div>
-                    </Link>
-                    <div className="item-cat">{item.category}</div>
-                    {item.needsPrescription && (
-                      <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.25rem' }}>Prescription Req.</span>
-                    )}
-                  </div>
-
-                  <div className="qty-selector">
-                    <button className="qty-btn" onClick={() => handleUpdateQty(item.medicineId, item.quantity - 1)}>-</button>
-                    <div className="qty-val">{item.quantity}</div>
-                    <button className="qty-btn" onClick={() => handleUpdateQty(item.medicineId, item.quantity + 1)}>+</button>
-                  </div>
-
-                  <div className="cart-item-price">
-                    ₹{item.total}
-                    {item.discount > 0 && (
-                      <div style={{ fontSize: '0.75rem', textDecoration: 'line-through', color: 'var(--text-muted)', fontWeight: '400' }}>
-                        ₹{item.price * item.quantity}
+                    <div className="cart-item-info">
+                      <Link to={`/medicine/${item.medicineId}`}>
+                        <div className="item-name">{item.name}</div>
+                      </Link>
+                      <div className="item-cat">{item.category}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        {item.manufacturer && <span>🏭 {item.manufacturer}</span>}
+                        {item.manufacturer && item.expiryDate && <span style={{ margin: '0 0.5rem' }}>|</span>}
+                        {item.expiryDate && <span style={{ color: 'var(--color-danger)' }}>⏳ Exp: {item.expiryDate}</span>}
                       </div>
-                    )}
-                  </div>
+                      {item.needsPrescription && (
+                        <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: '0.25rem' }}>Prescription Req.</span>
+                      )}
+                    </div>
 
-                  <button className="btn btn-danger btn-sm" onClick={() => handleRemoveItem(item.medicineId)}>
-                    ✕
-                  </button>
-                </div>
-              );
-            })}
+                    <div className="qty-selector">
+                      <button className="qty-btn" onClick={() => handleUpdateQty(item.medicineId, item.quantity - 1)}>-</button>
+                      <div className="qty-val">{item.quantity}</div>
+                      <button className="qty-btn" onClick={() => handleUpdateQty(item.medicineId, item.quantity + 1)}>+</button>
+                    </div>
+
+                    <div className="cart-item-price">
+                      ₹{item.total}
+                      {item.discount > 0 && (
+                        <div style={{ fontSize: '0.75rem', textDecoration: 'line-through', color: 'var(--text-muted)', fontWeight: '400' }}>
+                          ₹{item.price * item.quantity}
+                        </div>
+                      )}
+                    </div>
+
+                    <button className="btn btn-danger btn-sm" onClick={() => handleRemoveItem(item.medicineId)}>
+                      ✕
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
 
           {/* Cart Pricing Summary Sidebar */}

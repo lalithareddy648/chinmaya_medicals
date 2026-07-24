@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
@@ -177,7 +178,14 @@ const Checkout = () => {
 
       <div className="cart-layout">
         {/* Checkout Forms */}
-        <form onSubmit={handlePlaceOrder} className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <motion.form 
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          onSubmit={handlePlaceOrder} 
+          className="glass-panel" 
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
+        >
           <h3 style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>Shipping Information</h3>
           
           <div className="form-group">
@@ -349,11 +357,17 @@ const Checkout = () => {
               </div>
             </div>
           )}
-        </form>
+        </motion.form>
 
         {/* Totals Summary sidebar */}
         {cart && (
-          <div className="glass-panel summary-card" style={{ height: 'fit-content' }}>
+          <motion.div 
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="glass-panel summary-card" 
+            style={{ height: 'fit-content' }}
+          >
             <h3 className="summary-title">Order Overview</h3>
             
             <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -406,7 +420,7 @@ const Checkout = () => {
             <Link to="/cart" className="btn btn-secondary" style={{ width: '100%', marginTop: '0.75rem' }}>
               Return to Cart
             </Link>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
