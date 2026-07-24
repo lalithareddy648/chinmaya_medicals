@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import OrderTimeline from '../components/OrderTimeline';
 import LiveTrackingMap from '../components/LiveTrackingMap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const MyOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -10,6 +11,8 @@ const MyOrders = () => {
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [reorderingId, setReorderingId] = useState(null);
+  const navigate = useNavigate();
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -58,6 +61,23 @@ const MyOrders = () => {
       'Out For Delivery': '🚚', 'Delivered': '🎉',
     };
     return map[status] || '📋';
+  };
+
+  const handleReorder = async (order) => {
+    setReorderingId(order._id);
+    try {
+      for (const item of order.items) {
+        await api.post('/api/cart', { medicineId: item.medicineId, quantity: item.quantity });
+      }
+      window.dispatchEvent(new Event('cart-updated'));
+      toast.success('Items added to cart!');
+      navigate('/cart');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to reorder items');
+    } finally {
+      setReorderingId(null);
+    }
   };
 
   if (loading && orders.length === 0) {
@@ -145,9 +165,22 @@ const MyOrders = () => {
                       color: statusColor,
                       fontWeight: '700',
                       fontSize: '0.85rem',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.5rem'
                     }}>
-                      {getStatusEmoji(order.deliveryStatus)} {order.deliveryStatus}
+                      <div style={{ textAlign: 'center' }}>
+                        {getStatusEmoji(order.deliveryStatus)} {order.deliveryStatus}
+                      </div>
+                      <button 
+                        className="btn btn-primary btn-sm"
+                        style={{ padding: '0.3rem 0.8rem', fontSize: '0.75rem' }}
+                        onClick={() => handleReorder(order)}
+                        disabled={reorderingId === order._id}
+                      >
+                        {reorderingId === order._id ? '⏳ Adding...' : '🔄 Reorder'}
+                      </button>
                     </div>
                   </div>
                 </div>

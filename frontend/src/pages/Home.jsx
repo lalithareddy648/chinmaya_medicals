@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { AuthContext } from '../context/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const CATEGORY_ICONS = { All: '💊', Tablet: '💊', Syrup: '🍶', Injection: '💉' };
 
@@ -11,7 +12,6 @@ const Home = () => {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [loading, setLoading] = useState(true);
-  const [actionMessage, setActionMessage] = useState(null);
   const [addingIds, setAddingIds] = useState(new Set());
   const [globalDiscount, setGlobalDiscount] = useState(15);
   const navigate = useNavigate();
@@ -56,12 +56,11 @@ const Home = () => {
     try {
       await api.post('/api/cart', { medicineId: medId, quantity: 1 });
       window.dispatchEvent(new Event('cart-updated'));
-      setActionMessage({ id: medId, text: '✓ Added to cart!', type: 'success' });
+      toast.success('Added to cart!');
     } catch (err) {
-      setActionMessage({ id: medId, text: err.response?.data?.message || 'Failed to add', type: 'error' });
+      toast.error(err.response?.data?.message || 'Failed to add to cart');
     } finally {
       setAddingIds(prev => { const s = new Set(prev); s.delete(medId); return s; });
-      setTimeout(() => setActionMessage(null), 3000);
     }
   };
 
@@ -161,20 +160,30 @@ const Home = () => {
           </div>
         </div>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '4rem' }}>
-            <div className="processing-spinner" style={{ margin: '0 auto' }} />
-            <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Loading medicines...</p>
-          </div>
-        ) : medicines.length === 0 ? (
-          <div className="glass-panel" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔎</div>
-            <h3 style={{ marginBottom: '0.5rem' }}>No Medicines Found</h3>
-            <p style={{ color: 'var(--text-muted)' }}>Try a different search term or category.</p>
-          </div>
-        ) : (
-          <div className="medicines-grid">
-            {medicines.map((med) => {
+        <div className="medicines-grid">
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="medicine-card" style={{ padding: '0', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '220px', background: 'var(--border-glass)', animation: 'pulse 1.5s infinite' }}></div>
+                <div style={{ padding: '1.25rem' }}>
+                  <div style={{ width: '30%', height: '1.2rem', background: 'var(--border-glass)', borderRadius: '4px', marginBottom: '0.5rem', animation: 'pulse 1.5s infinite' }}></div>
+                  <div style={{ width: '80%', height: '1.5rem', background: 'var(--border-glass)', borderRadius: '4px', marginBottom: '1rem', animation: 'pulse 1.5s infinite' }}></div>
+                  <div style={{ width: '50%', height: '1rem', background: 'var(--border-glass)', borderRadius: '4px', marginBottom: '1rem', animation: 'pulse 1.5s infinite' }}></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                     <div style={{ width: '40%', height: '2rem', background: 'var(--border-glass)', borderRadius: '4px', animation: 'pulse 1.5s infinite' }}></div>
+                     <div style={{ width: '40%', height: '2.5rem', background: 'var(--border-glass)', borderRadius: '999px', animation: 'pulse 1.5s infinite' }}></div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : medicines.length === 0 ? (
+            <div className="glass-panel" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem 2rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔎</div>
+              <h3>No Medicines Found</h3>
+              <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search or selecting a different category.</p>
+            </div>
+          ) : (
+            medicines.map((med) => {
               const discPct = (med.discount !== undefined && med.discount > 0) ? Number(med.discount) : globalDiscount;
               const discountedPrice = Math.round(med.price - (med.price * (discPct / 100)));
               const stockInfo = getStockInfo(med.stock);
@@ -264,22 +273,10 @@ const Home = () => {
                       </Link>
                     </div>
                   </div>
-
-                  {actionMessage?.id === med._id && (
-                    <div style={{
-                      marginTop: '0.75rem', fontSize: '0.82rem', textAlign: 'center', fontWeight: '600',
-                      padding: '0.4rem', borderRadius: '8px',
-                      color: actionMessage.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
-                      background: actionMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                    }}>
-                      {actionMessage.text}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -67,13 +67,16 @@ const AdminDashboard = () => {
 
       // Compute stats
       const totalRev = ordersRes.data.reduce((sum, order) => sum + order.totalPrice, 0);
-      const outStock = medsRes.data.filter(med => med.stock <= 0).length;
+      const outStockList = medsRes.data.filter(med => med.stock <= 0);
+      const lowStockList = medsRes.data.filter(med => med.stock > 0 && med.stock < 15);
 
       setStats({
         revenue: totalRev,
         ordersCount: ordersRes.data.length,
-        outOfStock: outStock,
-        totalMedicines: medsRes.data.length
+        outOfStock: outStockList.length,
+        totalMedicines: medsRes.data.length,
+        outStockList,
+        lowStockList
       });
       
     } catch (err) {
@@ -302,6 +305,41 @@ const AdminDashboard = () => {
                   <div className="stat-icon">🚨</div>
                 </div>
               </div>
+
+              {/* Low Stock Alerts Section */}
+              {(stats.outStockList?.length > 0 || stats.lowStockList?.length > 0) && (
+                <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: '1fr', marginBottom: '2rem' }}>
+                  {stats.outStockList?.length > 0 && (
+                    <div className="glass-panel" style={{ borderLeft: '4px solid var(--color-danger)', background: 'rgba(239, 68, 68, 0.05)' }}>
+                      <h3 style={{ color: 'var(--color-danger)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>🚨</span> Critical Out of Stock
+                      </h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                        {stats.outStockList.map(med => (
+                          <div key={med._id} style={{ background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem' }}>
+                            <strong>{med.name}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {stats.lowStockList?.length > 0 && (
+                    <div className="glass-panel" style={{ borderLeft: '4px solid var(--color-warning)', background: 'rgba(245, 158, 11, 0.05)' }}>
+                      <h3 style={{ color: 'var(--color-warning)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>⚠️</span> Low Stock Warning (Less than 15 left)
+                      </h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                        {stats.lowStockList.map(med => (
+                          <div key={med._id} style={{ background: 'var(--bg-secondary)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                            <strong>{med.name}</strong>
+                            <span style={{ color: 'var(--color-warning)', fontWeight: '700' }}>{med.stock} left</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Visual CSS-based analytics */}
               <div className="glass-panel">

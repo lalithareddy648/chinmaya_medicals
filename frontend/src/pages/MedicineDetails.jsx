@@ -3,14 +3,16 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 
+import { toast } from 'react-hot-toast';
+
 const MedicineDetails = () => {
   const { id } = useParams();
   const { user } = useContext(AuthContext);
   const [medicine, setMedicine] = useState(null);
+  const [relatedMedicines, setRelatedMedicines] = useState([]);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [addedMessage, setAddedMessage] = useState(null);
   const [globalDiscount, setGlobalDiscount] = useState(15);
   const navigate = useNavigate();
 
@@ -20,6 +22,12 @@ const MedicineDetails = () => {
         setLoading(true);
         const res = await api.get(`/api/medicines/${id}`);
         setMedicine(res.data);
+        
+        // Fetch related medicines
+        const relatedRes = await api.get('/api/medicines', { params: { category: res.data.category } });
+        // Filter out the current medicine and take up to 4
+        const filtered = relatedRes.data.filter(m => m._id !== res.data._id).slice(0, 4);
+        setRelatedMedicines(filtered);
       } catch (err) {
         setError(err.response?.data?.message || 'Medicine not found');
       } finally {
@@ -62,12 +70,9 @@ const MedicineDetails = () => {
       // Sync navbar cart
       window.dispatchEvent(new Event('cart-updated'));
 
-      setAddedMessage({ text: `Successfully added ${qty} item(s) to cart! ✓`, type: 'success' });
-      setTimeout(() => setAddedMessage(null), 3000);
+      toast.success(`Successfully added ${qty} item(s) to cart! ✓`);
     } catch (err) {
-      const errMsg = err.response?.data?.message || 'Failed to add to cart';
-      setAddedMessage({ text: errMsg, type: 'error' });
-      setTimeout(() => setAddedMessage(null), 4000);
+      toast.error(err.response?.data?.message || 'Failed to add to cart');
     }
   };
 
@@ -207,20 +212,6 @@ const MedicineDetails = () => {
             </button>
           </div>
 
-          {addedMessage && (
-            <div style={{
-              marginTop: '1rem',
-              padding: '0.75rem',
-              borderRadius: '8px',
-              fontWeight: '600',
-              textAlign: 'center',
-              background: addedMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-              color: addedMessage.type === 'success' ? 'var(--color-success)' : 'var(--color-danger)',
-              border: addedMessage.type === 'success' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)'
-            }}>
-              {addedMessage.text}
-            </div>
-          )}
         </div>
       </div>
 
@@ -258,6 +249,38 @@ const MedicineDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Related Medicines Section */}
+      {relatedMedicines.length > 0 && (
+        <div style={{ marginTop: '3rem' }}>
+          <h3 style={{ marginBottom: '1.5rem', fontSize: '1.4rem' }}>You Might Also Need</h3>
+          <div className="medicines-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {relatedMedicines.map((med) => {
+              const rDiscPct = (med.discount !== undefined && med.discount > 0) ? Number(med.discount) : globalDiscount;
+              const rDiscountedPrice = Math.round(med.price - (med.price * (rDiscPct / 100)));
+              
+              return (
+                <div key={med._id} className="medicine-card" style={{ padding: '0', overflow: 'hidden' }}>
+                  <div style={{ height: '160px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    {med.image ? (
+                      <img src={med.image} alt={med.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '3rem' }}>{med.category === 'Tablet' ? '💊' : med.category === 'Syrup' ? '🍶' : '💉'}</span>
+                    )}
+                  </div>
+                  <div style={{ padding: '1rem' }}>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{med.name}</h4>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                      <span style={{ fontWeight: '700', color: 'var(--color-primary)' }}>₹{rDiscountedPrice}</span>
+                      <Link to={`/medicine/${med._id}`} className="btn btn-secondary btn-sm" style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}>View</Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import { Toaster } from 'react-hot-toast';
 
 // Pages
 import Home from './pages/Home';
@@ -21,6 +22,15 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="app-container">
+          <Toaster position="bottom-right" toastOptions={{
+            style: {
+              background: 'rgba(15, 23, 42, 0.95)',
+              color: '#fff',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '12px'
+            }
+          }}/>
           <Background3D />
           <Navbar />
           <main className="main-content">
