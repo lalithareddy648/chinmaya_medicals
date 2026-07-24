@@ -1,11 +1,12 @@
 import { pool } from '../config/db.js';
+import crypto from 'crypto';
 
 // Helper to populate and calculate cart details
 const getPopulatedCart = async (userId) => {
   let cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [userId]);
   let cart;
   if (cartRes.rows.length === 0) {
-    const id = Math.random().toString(36).substring(2, 11);
+    const id = crypto.randomUUID();
     await pool.query('INSERT INTO carts (id, user_id, items) VALUES ($1, $2, $3)', [id, userId, JSON.stringify([])]);
     cart = { id, user_id: userId, items: [] };
   } else {
@@ -112,7 +113,7 @@ export const addToCart = async (req, res) => {
     let cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
     let cart;
     if (cartRes.rows.length === 0) {
-      const id = Math.random().toString(36).substring(2, 11);
+      const id = crypto.randomUUID();
       await pool.query('INSERT INTO carts (id, user_id, items) VALUES ($1, $2, $3)', [id, req.user._id, JSON.stringify([])]);
       cart = { id, items: [] };
     } else {

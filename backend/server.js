@@ -5,9 +5,10 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 
 // Controllers
-import { registerUser, loginUser, getUserProfile, resetPassword } from './controllers/authController.js';
+import { registerUser, loginUser, getUserProfile, resetPassword, forgotPassword } from './controllers/authController.js';
 import { getMedicines, getMedicineById, createMedicine, updateMedicine, deleteMedicine } from './controllers/medicineController.js';
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from './controllers/cartController.js';
 import { placeOrder, getMyOrders, getOrderById, getAllOrders, updateOrderStatus } from './controllers/orderController.js';
@@ -28,8 +29,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://chinmaya-medicals.vercel.app'] 
+    : '*'
+}));
 app.use(express.json());
+
+// Rate Limiting
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 auth requests per windowMs
+  message: 'Too many authentication attempts from this IP, please try again later.'
+});
+
+const agentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // limit each IP to 50 agent requests per windowMs
+  message: 'Too many requests to the AI agent, please try again later.'
+});
 
 // Ensure uploads folder exists
 const uploadsDir = process.env.VERCEL
@@ -73,10 +91,11 @@ const upload = multer({
 // API Routes
 
 // Authentication Routes
-app.post('/api/auth/register', registerUser);
-app.post('/api/auth/login', loginUser);
+app.post('/api/auth/register', authLimiter, registerUser);
+app.post('/api/auth/login', authLimiter, loginUser);
 app.get('/api/auth/profile', protect, getUserProfile);
-app.post('/api/auth/reset-password', resetPassword);
+app.post('/api/auth/forgot-password', authLimiter, forgotPassword);
+app.post('/api/auth/reset-password', authLimiter, resetPassword);
 
 // Medicines Catalog Routes
 app.get('/api/medicines', getMedicines);
@@ -104,7 +123,7 @@ app.get('/api/settings', protect, getSettings);
 app.put('/api/settings', protect, admin, updateSettings);
 
 // Agent Routes
-app.post('/api/agent/chat', handleAgentChat);
+app.post('/api/agent/chat', protect, agentLimiter, handleAgentChat);
 app.post('/api/agent/read-prescription', protect, upload.single('prescriptionImage'), readPrescription);
 
 // Prescription Upload Route

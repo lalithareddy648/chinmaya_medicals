@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import crypto from 'crypto';
 
 // Convert snake_case db rows to camelCase frontend expectations
 const formatOrder = (orderRow, itemsRows) => ({
@@ -131,7 +132,7 @@ export const placeOrder = async (req, res) => {
     };
 
     // 4. Create order record
-    const id = Math.random().toString(36).substring(2, 11);
+    const id = crypto.randomUUID();
     
     // Convert to JSON for address and coords
     const shippingAddressJson = JSON.stringify(shippingAddress);
@@ -148,7 +149,7 @@ export const placeOrder = async (req, res) => {
 
     // 4b. Create order_items records
     for (const oi of orderItems) {
-      const oiId = Math.random().toString(36).substring(2, 11);
+      const oiId = crypto.randomUUID();
       await pool.query(
         `INSERT INTO order_items (id, order_id, medicine_id, name, category, price, discount, discounted_price, quantity, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [oiId, id, oi.medicineId, oi.name, oi.category, oi.price, oi.discount, oi.discountedPrice, oi.quantity, oi.total]

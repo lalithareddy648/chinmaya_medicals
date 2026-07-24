@@ -1,11 +1,17 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { pool } from '../config/db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chinmayamedicalssecretkey12345!';
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL ERROR: JWT_SECRET is not defined.');
+  }
+  return process.env.JWT_SECRET;
+};
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id }, getJwtSecret(), { expiresIn: '30d' });
 };
 
 // @desc    Register a new user
@@ -33,7 +39,7 @@ export const registerUser = async (req, res) => {
     const isFirstUser = parseInt(allUsersRes.rows[0].count) === 0;
     const isAdmin = isFirstUser || email.toLowerCase() === 'admin@chinmaya.com';
 
-    const id = Math.random().toString(36).substring(2, 11);
+    const id = crypto.randomUUID();
     
     await pool.query(
       'INSERT INTO users (id, name, email, password, is_admin) VALUES ($1, $2, $3, $4, $5)',
@@ -111,14 +117,14 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-// @desc    Simulate reset password
-// @route   POST /api/auth/reset-password
+// @desc    Generate reset password token
+// @route   POST /api/auth/forgot-password
 // @access  Public
-export const resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
 
-  if (!email || !newPassword) {
-    return res.status(400).json({ message: 'Please provide email and new password' });
+  if (!email) {
+    return res.status(400).json({ message: 'Please provide an email' });
   }
 
   try {
@@ -129,11 +135,67 @@ export const resetPassword = async (req, res) => {
 
     const user = userRes.rows[0];
 
-    // Hash password
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    
+    // Hash token for saving in DB
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    // Set expiration to 15 minutes from now
+    const resetTokenExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await pool.query('UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3', 
+      [resetTokenHash, resetTokenExpires, user.id]);
+
+    // Simulate sending email
+    console.log(`\n\n[EMAIL SIMULATION]`);
+    console.log(`To: ${user.email}`);
+    console.log(`Subject: Password Reset Request`);
+    console.log(`Body: Use this token to reset your password: ${resetToken}`);
+    console.log(`\n\n`);
+
+    res.json({ message: 'Password reset token has been sent to email (check server logs)' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Reset password with token
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res) => {
+  const { resetToken, newPassword } = req.body;
+
+  if (!resetToken || !newPassword) {
+    return res.status(400).json({ message: 'Please provide reset token and new password' });
+  }
+
+  try {
+    // Hash the provided token to match DB
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    const userRes = await pool.query(
+      'SELECT * FROM users WHERE reset_token = $1 AND reset_token_expires > CURRENT_TIMESTAMP', 
+      [resetTokenHash]
+    );
+
+    if (userRes.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    const user = userRes.rows[0];
+
+    // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    await pool.query('UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [hashedPassword, user.id]);
+    // Update password and clear token fields
+    await pool.query(
+      'UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $2', 
+      [hashedPassword, user.id]
+    );
+
     res.json({ message: 'Password has been reset successfully! ✓' });
   } catch (error) {
     console.error('Reset password error:', error);

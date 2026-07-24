@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import crypto from 'crypto';
 
 // Get settings
 export const getSettings = async (req, res) => {
@@ -6,7 +7,7 @@ export const getSettings = async (req, res) => {
     let settingsRes = await pool.query('SELECT * FROM settings LIMIT 1');
     if (settingsRes.rows.length === 0) {
       // Create default settings if they don't exist
-      const id = Math.random().toString(36).substring(2, 11);
+      const id = crypto.randomUUID();
       await pool.query('INSERT INTO settings (id, discount_percentage) VALUES ($1, $2)', [id, 15]);
       res.json({ _id: id, discountPercentage: 15 });
     } else {
@@ -30,7 +31,7 @@ export const updateSettings = async (req, res) => {
   try {
     let settingsRes = await pool.query('SELECT * FROM settings LIMIT 1');
     if (settingsRes.rows.length === 0) {
-      const id = Math.random().toString(36).substring(2, 11);
+      const id = crypto.randomUUID();
       await pool.query('INSERT INTO settings (id, discount_percentage) VALUES ($1, $2)', [id, Number(discountPercentage)]);
       res.json({ _id: id, discountPercentage: Number(discountPercentage) });
     } else {

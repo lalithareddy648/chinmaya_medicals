@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import { pool } from '../config/db.js';
+import crypto from 'crypto';
 
 // Controller to handle chat requests
 export const handleAgentChat = async (req, res) => {
@@ -115,7 +116,7 @@ export const readPrescription = async (req, res) => {
     let cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
     let userCart;
     if (cartRes.rows.length === 0) {
-      const cartId = Math.random().toString(36).substring(2, 11);
+      const cartId = crypto.randomUUID();
       await pool.query('INSERT INTO carts (id, user_id, items) VALUES ($1, $2, $3)', [cartId, req.user._id, JSON.stringify([])]);
       userCart = { id: cartId, items: [] };
     } else {

@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pkg from 'pg';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 const { Pool } = pkg;
@@ -38,7 +39,7 @@ const initializeDB = async () => {
             
             for (const item of data) {
               const { _id, createdAt, updatedAt, ...rest } = item;
-              const id = _id || Math.random().toString(36).substring(2, 11);
+              const id = _id || crypto.randomUUID();
               const crAt = createdAt || new Date().toISOString();
               const upAt = updatedAt || new Date().toISOString();
               
@@ -79,7 +80,7 @@ const initializeDB = async () => {
                 // Insert into order_items
                 if (rest.items && Array.isArray(rest.items)) {
                   for (const orderItem of rest.items) {
-                    const orderItemId = Math.random().toString(36).substring(2, 11);
+                    const orderItemId = crypto.randomUUID();
                     await pool.query(
                       `INSERT INTO order_items (id, order_id, medicine_id, name, category, price, discount, discounted_price, quantity, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
                       [

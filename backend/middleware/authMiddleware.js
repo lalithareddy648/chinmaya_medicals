@@ -1,7 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'chinmayamedicalssecretkey12345!';
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('FATAL ERROR: JWT_SECRET is not defined.');
+  }
+  return process.env.JWT_SECRET;
+};
 
 export const protect = async (req, res, next) => {
   let token;
@@ -12,7 +17,7 @@ export const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, getJwtSecret());
 
       const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.id]);
       if (userRes.rows.length === 0) {

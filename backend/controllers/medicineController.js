@@ -1,4 +1,5 @@
 import { pool } from '../config/db.js';
+import crypto from 'crypto';
 
 // Convert snake_case db rows to camelCase frontend expectations
 const formatMedicine = (row) => ({
@@ -86,7 +87,7 @@ export const createMedicine = async (req, res) => {
   }
 
   try {
-    const id = Math.random().toString(36).substring(2, 11);
+    const id = crypto.randomUUID();
     const np = needsPrescription === true || needsPrescription === 'true';
 
     await pool.query(
