@@ -6,6 +6,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 // Controllers
 import { registerUser, loginUser, getUserProfile, resetPassword, forgotPassword } from './controllers/authController.js';
@@ -13,12 +14,14 @@ import { getMedicines, getMedicineById, createMedicine, updateMedicine, deleteMe
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from './controllers/cartController.js';
 import { placeOrder, getMyOrders, getOrderById, getAllOrders, updateOrderStatus } from './controllers/orderController.js';
 import { getSettings, updateSettings } from './controllers/settingsController.js';
-import { handleAgentChat, readPrescription } from './controllers/agentController.js';
+import { handleAgentChat, readPrescription, identifyMedicine } from './controllers/agentController.js';
 import { getReminders, createReminder, deleteReminder, getSubscriptions, createSubscription, updateSubscriptionStatus } from './controllers/healthController.js';
 import { initializeDB } from './config/db.js';
 
 // Middleware
 import { protect, admin } from './middleware/authMiddleware.js';
+import { validate } from './middleware/validate.js';
+import { registerSchema } from './schemas/authSchemas.js';
 
 dotenv.config();
 
@@ -30,10 +33,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
+app.use(helmet());
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://chinmaya-medicals.vercel.app'] 
-    : '*'
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
 }));
 app.use(express.json());
 
@@ -105,7 +108,7 @@ const upload = multer({
 // API Routes
 
 // Authentication Routes
-app.post('/api/auth/register', authLimiter, registerUser);
+app.post('/api/auth/register', authLimiter, validate(registerSchema), registerUser);
 app.post('/api/auth/login', authLimiter, loginUser);
 app.get('/api/auth/profile', protect, getUserProfile);
 app.post('/api/auth/forgot-password', authLimiter, forgotPassword);
@@ -139,6 +142,7 @@ app.put('/api/settings', protect, admin, updateSettings);
 // Agent Routes
 app.post('/api/agent/chat', protect, agentLimiter, handleAgentChat);
 app.post('/api/agent/read-prescription', protect, upload.single('prescriptionImage'), readPrescription);
+app.post('/api/agent/identify-medicine', protect, identifyMedicine);
 
 // Health Routes (Reminders & Subscriptions)
 app.get('/api/health/reminders', protect, getReminders);

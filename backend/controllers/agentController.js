@@ -152,3 +152,51 @@ export const readPrescription = async (req, res) => {
     res.status(500).json({ error: 'Failed to process prescription image.' });
   }
 };
+
+export const identifyMedicine = async (req, res) => {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+    }
+
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ error: 'No image provided.' });
+    }
+
+    const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
+
+    const medicinesRes = await pool.query('SELECT id, name, price, expiry_date as expiry, image FROM medicines');
+    const inventoryInfo = medicinesRes.rows.map(m => JSON.stringify(m)).join('\n');
+    
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      systemInstruction: `You are an AI pill identifier. Given an image, identify the medicine. Here is the JSON data of the store's inventory:\n${inventoryInfo}\nFind the closest match by name. Return ONLY a JSON object containing the exact matched inventory item. Do not include markdown formatting or backticks.`
+    });
+
+    const result = await model.generateContent({
+      contents: [
+        { role: 'user', parts: [
+            { inlineData: { data: base64Image, mimeType: 'image/jpeg' } },
+            { text: "Identify this medicine." }
+          ]
+        }
+      ],
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const responseText = result.response.text();
+    const parsed = JSON.parse(responseText);
+    
+    if (parsed && parsed.id) {
+       res.json({ success: true, medicine: parsed });
+    } else {
+       res.status(404).json({ error: 'Could not identify medicine.' });
+    }
+  } catch (error) {
+    console.error('AR Identify Error:', error);
+    res.status(500).json({ error: 'Failed to identify medicine.' });
+  }
+};

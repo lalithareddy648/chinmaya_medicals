@@ -39,10 +39,15 @@ export const placeOrder = async (req, res) => {
     return res.status(400).json({ message: 'Please provide full shipping details' });
   }
 
+  const client = await pool.connect();
+
   try {
+    await client.query('BEGIN');
+
     // 1. Fetch user's cart
-    const cartRes = await pool.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
+    const cartRes = await client.query('SELECT * FROM carts WHERE user_id = $1', [req.user._id]);
     if (cartRes.rows.length === 0 || cartRes.rows[0].items.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ message: 'Your cart is empty' });
     }
     const cart = cartRes.rows[0];
@@ -50,7 +55,7 @@ export const placeOrder = async (req, res) => {
     // 2. Fetch full medicine details, calculate prices, check stocks
     let discountPct = 15;
     try {
-      const settingsRes = await pool.query('SELECT * FROM settings LIMIT 1');
+      const settingsRes = await client.query('SELECT * FROM settings LIMIT 1');
       if (settingsRes.rows.length > 0 && settingsRes.rows[0].discount_percentage !== undefined) {
         discountPct = Number(settingsRes.rows[0].discount_percentage);
       }
@@ -64,17 +69,12 @@ export const placeOrder = async (req, res) => {
     let hasPrescriptionRequiredItems = false;
 
     for (const item of cart.items) {
-      const medRes = await pool.query('SELECT * FROM medicines WHERE id = $1', [item.medicineId]);
+      const medRes = await client.query('SELECT * FROM medicines WHERE id = $1', [item.medicineId]);
       if (medRes.rows.length === 0) {
+        await client.query('ROLLBACK');
         return res.status(404).json({ message: `Medicine not found for ID: ${item.medicineId}` });
       }
       const medicine = medRes.rows[0];
-
-      if (medicine.stock < item.quantity) {
-        return res.status(400).json({ 
-          message: `Insufficient stock for ${medicine.name}. Available: ${medicine.stock}, Requested: ${item.quantity}` 
-        });
-      }
 
       if (medicine.needs_prescription) {
         hasPrescriptionRequiredItems = true;
@@ -107,6 +107,7 @@ export const placeOrder = async (req, res) => {
 
     // Check if prescription was uploaded for required medicines
     if (hasPrescriptionRequiredItems && !prescriptionPath) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ 
         message: 'A prescription file is required for one or more medicines in your cart' 
       });
@@ -116,9 +117,23 @@ export const placeOrder = async (req, res) => {
     const deliveryCharge = (deliveryType === 'Non-local' && (itemsPrice - totalDiscount) < 500) ? 50 : 0;
     const totalPrice = itemsPrice - totalDiscount + deliveryCharge;
 
-    // 3. Reduce inventory stocks
+    // 3. Reduce inventory stocks (atomic check and update)
     for (const item of cart.items) {
-      await pool.query('UPDATE medicines SET stock = stock - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [item.quantity, item.medicineId]);
+      const stockRes = await client.query(
+        'UPDATE medicines SET stock = stock - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND stock >= $1 RETURNING stock, name', 
+        [item.quantity, item.medicineId]
+      );
+      if (stockRes.rowCount === 0) {
+        // If rowCount is 0, it means either medicine doesn't exist or stock < quantity
+        const checkRes = await client.query('SELECT name, stock FROM medicines WHERE id = $1', [item.medicineId]);
+        const name = checkRes.rows.length > 0 ? checkRes.rows[0].name : item.medicineId;
+        const currentStock = checkRes.rows.length > 0 ? checkRes.rows[0].stock : 0;
+        
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          message: `Insufficient stock for ${name}. Available: ${currentStock}, Requested: ${item.quantity}` 
+        });
+      }
     }
 
     // Generate random but persistent customer coordinates around Narasaraopet
@@ -139,7 +154,7 @@ export const placeOrder = async (req, res) => {
     const custCoordsJson = JSON.stringify(customerCoordinates);
     const drvCoordsJson = JSON.stringify(driverCoordinates);
     
-    await pool.query(
+    await client.query(
       `INSERT INTO orders (id, user_id, user_name, user_email, total_amount, shipping_address, payment_method, payment_status, delivery_status, prescription_url, customer_coordinates, driver_coordinates) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         id, req.user._id, req.user.name, req.user.email, totalPrice, shippingAddressJson,
@@ -150,21 +165,26 @@ export const placeOrder = async (req, res) => {
     // 4b. Create order_items records
     for (const oi of orderItems) {
       const oiId = crypto.randomUUID();
-      await pool.query(
+      await client.query(
         `INSERT INTO order_items (id, order_id, medicine_id, name, category, price, discount, discounted_price, quantity, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [oiId, id, oi.medicineId, oi.name, oi.category, oi.price, oi.discount, oi.discountedPrice, oi.quantity, oi.total]
       );
     }
 
     // 5. Clear user's cart
-    await pool.query('UPDATE carts SET items = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify([]), cart.id]);
+    await client.query('UPDATE carts SET items = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [JSON.stringify([]), cart.id]);
+
+    await client.query('COMMIT');
 
     const newOrderRes = await pool.query('SELECT * FROM orders WHERE id = $1', [id]);
     const itemsRes = await pool.query('SELECT * FROM order_items WHERE order_id = $1', [id]);
     res.status(201).json(formatOrder(newOrderRes.rows[0], itemsRes.rows));
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Order placement error:', error);
     res.status(500).json({ message: 'Server error' });
+  } finally {
+    client.release();
   }
 };
 

@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { pool } from '../config/db.js';
+import { sendResetEmail } from '../utils/mailer.js';
 
 const getJwtSecret = () => {
   if (!process.env.JWT_SECRET) {
@@ -147,12 +148,8 @@ export const forgotPassword = async (req, res) => {
     await pool.query('UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3', 
       [resetTokenHash, resetTokenExpires, user.id]);
 
-    // Simulate sending email
-    console.log(`\n\n[EMAIL SIMULATION]`);
-    console.log(`To: ${user.email}`);
-    console.log(`Subject: Password Reset Request`);
-    console.log(`Body: Use this token to reset your password: ${resetToken}`);
-    console.log(`\n\n`);
+    // Send real email via Resend
+    await sendResetEmail(user.email, resetToken);
 
     res.json({ message: 'Password reset token has been sent to email (check server logs)' });
   } catch (error) {

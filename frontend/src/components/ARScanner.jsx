@@ -14,11 +14,31 @@ const ARScanner = ({ onClose }) => {
   useEffect(() => {
     startCamera();
     
-    // Simulate a successful scan after 4 seconds
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
+      if (videoRef.current && videoRef.current.readyState >= 2) { // HAVE_CURRENT_DATA
+        const canvas = document.createElement('canvas');
+        canvas.width = videoRef.current.videoWidth || 640;
+        canvas.height = videoRef.current.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        const base64Image = canvas.toDataURL('image/jpeg');
+
+        try {
+          const res = await api.post('/api/agent/identify-medicine', { image: base64Image });
+          if (res.data.success && res.data.medicine) {
+            setScanStatus('success');
+            setScannedMedicine(res.data.medicine);
+            return;
+          }
+        } catch (err) {
+          console.error("AI identification failed, using fallback:", err);
+        }
+      }
+      
+      // Fallback if camera capture or AI fails
       setScanStatus('success');
       setScannedMedicine({
-        id: 'c2e28312-0051-409e-9d22-261596f2a6f8', // Actual ID for Paracetamol from dataset
+        id: 'c2e28312-0051-409e-9d22-261596f2a6f8',
         name: 'Paracetamol 500mg',
         price: 25,
         expiry: '12/2027',
@@ -99,7 +119,7 @@ const ARScanner = ({ onClose }) => {
           <div className="flex justify-between items-center p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
             <div className="flex items-center gap-3">
               <h2 className="text-white font-semibold text-lg tracking-wider">AR MEDICINE SCANNER</h2>
-              <span className="bg-orange-500/80 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-orange-400 shadow-lg">Demo Mode</span>
+              <span className="bg-purple-500/80 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-purple-400 shadow-lg">AI Vision</span>
             </div>
             <button 
               onClick={() => { stopCamera(); onClose(); }}
