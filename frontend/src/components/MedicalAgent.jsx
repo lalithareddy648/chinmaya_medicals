@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCommentMedical, FaTimes, FaPaperPlane, FaUser, FaRobot } from 'react-icons/fa';
+import { FaCommentMedical, FaTimes, FaPaperPlane, FaUser, FaRobot, FaMicrophone } from 'react-icons/fa';
+import api from '../api';
 
 const MedicalAgent = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +10,33 @@ const MedicalAgent = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [language, setLanguage] = useState('en-US');
   const messagesEndRef = useRef(null);
+
+  const startListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Your browser does not support speech recognition. Please try Chrome.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = language;
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+    };
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+      setIsListening(false);
+    };
+    recognition.onend = () => setIsListening(false);
+    
+    recognition.start();
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,22 +61,12 @@ const MedicalAgent = () => {
         parts: [{ text: msg.text }]
       }));
 
-      const res = await fetch('/api/agent/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage, history })
-      });
-
-      const data = await res.json();
-      
-      if (res.ok) {
-        setMessages(prev => [...prev, { role: 'model', text: data.response }]);
-      } else {
-        setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I am having trouble connecting to my server.' }]);
-      }
+      const res = await api.post('/api/agent/chat', { message: userMessage, history });
+      setMessages(prev => [...prev, { role: 'model', text: res.data.response }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'model', text: 'Sorry, an error occurred.' }]);
+      const errorMsg = error.response?.data?.error || 'Sorry, I am having trouble connecting to my server.';
+      setMessages(prev => [...prev, { role: 'model', text: errorMsg }]);
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +173,7 @@ const MedicalAgent = () => {
 
             {/* Input Area */}
             <div style={{ padding: '0.75rem', backgroundColor: '#fff', borderTop: '1px solid #eee' }}>
-              <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.5rem' }}>
+              <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <input
                   type="text"
                   value={input}
@@ -168,6 +185,18 @@ const MedicalAgent = () => {
                   }}
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={startListening}
+                  title="Speak"
+                  style={{
+                    backgroundColor: isListening ? '#ef4444' : '#e2e8f0', color: isListening ? '#fff' : '#475569', padding: '0.75rem', borderRadius: '50%',
+                    border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.2s', animation: isListening ? 'pulse-glow 1.5s infinite' : 'none'
+                  }}
+                >
+                  <FaMicrophone size={14} />
+                </button>
                 <button
                   type="submit"
                   disabled={isLoading || !input.trim()}

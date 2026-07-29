@@ -16,8 +16,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Background3D from './components/Background3D';
 import MedicalAgent from './components/MedicalAgent';
+import HealthDashboard from './pages/HealthDashboard';
+import ARScanner from './components/ARScanner';
+import { useState } from 'react';
 
 function App() {
+  const [showAR, setShowAR] = useState(false);
   return (
     <AuthProvider>
       <Router>
@@ -56,6 +60,11 @@ function App() {
                   <MyOrders />
                 </ProtectedRoute>
               } />
+              <Route path="/health-dashboard" element={
+                <ProtectedRoute>
+                  <HealthDashboard />
+                </ProtectedRoute>
+              } />
               
               {/* Protected Admin Routes */}
               <Route path="/admin" element={
@@ -65,6 +74,31 @@ function App() {
               } />
             </Routes>
             <MedicalAgent />
+            <button 
+              onClick={() => setShowAR(true)}
+              style={{
+                position: 'fixed',
+                bottom: '100px',
+                right: '20px',
+                width: '60px',
+                height: '60px',
+                borderRadius: '30px',
+                backgroundColor: 'rgba(6, 182, 212, 0.9)',
+                color: 'white',
+                border: '2px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                zIndex: 99
+              }}
+              title="AR Medicine Scanner"
+            >
+              📷
+            </button>
+            {showAR && <ARScanner onClose={() => setShowAR(false)} />}
           </main>
           <footer className="footer" style={{ borderTop: '1px solid var(--border-glass)', padding: '2rem 2rem', background: 'var(--bg-card)', marginTop: '3rem', fontSize: '0.9rem', width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem', maxWidth: '1280px', margin: '0 auto' }}>

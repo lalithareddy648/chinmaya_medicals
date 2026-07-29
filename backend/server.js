@@ -14,6 +14,7 @@ import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '.
 import { placeOrder, getMyOrders, getOrderById, getAllOrders, updateOrderStatus } from './controllers/orderController.js';
 import { getSettings, updateSettings } from './controllers/settingsController.js';
 import { handleAgentChat, readPrescription } from './controllers/agentController.js';
+import { getReminders, createReminder, deleteReminder, getSubscriptions, createSubscription, updateSubscriptionStatus } from './controllers/healthController.js';
 import { initializeDB } from './config/db.js';
 
 // Middleware
@@ -75,15 +76,28 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter(req, file, cb) {
-    const filetypes = /jpg|jpeg|png|pdf/;
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = filetypes.test(file.mimetype);
+    if (file.fieldname === 'prescription' || file.fieldname === 'prescriptionImage') {
+      const filetypes = /png|pdf/;
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = filetypes.test(file.mimetype);
 
-    if (extname && mimetype) {
-      return cb(null, true);
+      if (extname && mimetype) {
+        return cb(null, true);
+      } else {
+        cb(new Error('Only PNG and PDF files are allowed for prescriptions!'));
+      }
     } else {
-      cb(new Error('Only Images (JPG/JPEG/PNG) and PDFs are allowed!'));
+      const filetypes = /jpg|jpeg|png|pdf/;
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = filetypes.test(file.mimetype);
+
+      if (extname && mimetype) {
+        return cb(null, true);
+      } else {
+        cb(new Error('Only Images (JPG/JPEG/PNG) and PDFs are allowed!'));
+      }
     }
   }
 });
@@ -123,8 +137,16 @@ app.get('/api/settings', protect, getSettings);
 app.put('/api/settings', protect, admin, updateSettings);
 
 // Agent Routes
-app.post('/api/agent/chat', protect, agentLimiter, handleAgentChat);
+app.post('/api/agent/chat', agentLimiter, handleAgentChat);
 app.post('/api/agent/read-prescription', protect, upload.single('prescriptionImage'), readPrescription);
+
+// Health Routes (Reminders & Subscriptions)
+app.get('/api/health/reminders', protect, getReminders);
+app.post('/api/health/reminders', protect, createReminder);
+app.delete('/api/health/reminders/:id', protect, deleteReminder);
+app.get('/api/health/subscriptions', protect, getSubscriptions);
+app.post('/api/health/subscriptions', protect, createSubscription);
+app.put('/api/health/subscriptions/:id/status', protect, updateSubscriptionStatus);
 
 // Prescription Upload Route
 app.post('/api/upload', protect, upload.single('prescription'), (req, res) => {

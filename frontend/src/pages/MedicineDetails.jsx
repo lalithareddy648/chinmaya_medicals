@@ -14,6 +14,8 @@ const MedicineDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [globalDiscount, setGlobalDiscount] = useState(15);
+  const [reminderTime, setReminderTime] = useState('08:00');
+  const [showReminderForm, setShowReminderForm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,6 +75,24 @@ const MedicineDetails = () => {
       toast.success(`Successfully added ${qty} item(s) to cart! ✓`);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add to cart');
+    }
+  };
+
+  const handleSetReminder = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    try {
+      await api.post('/api/health/reminders', {
+        medicineId: medicine._id,
+        reminderTime,
+        frequency: 'Daily'
+      });
+      toast.success('Pill reminder set successfully! Manage it in Health Dashboard.');
+      setShowReminderForm(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to set reminder');
     }
   };
 
@@ -210,7 +230,28 @@ const MedicineDetails = () => {
             >
               Add to Shopping Cart 🛒
             </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setShowReminderForm(!showReminderForm)}
+            >
+              ⏰ Set Reminder
+            </button>
           </div>
+
+          {showReminderForm && (
+            <div className="glass-panel" style={{ marginTop: '1rem', padding: '1rem' }}>
+              <h4 style={{ marginBottom: '0.5rem' }}>Daily Pill Reminder</h4>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input 
+                  type="time" 
+                  value={reminderTime} 
+                  onChange={(e) => setReminderTime(e.target.value)}
+                  style={{ background: 'var(--bg-secondary)', color: 'white', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}
+                />
+                <button className="btn btn-primary btn-sm" onClick={handleSetReminder}>Save</button>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

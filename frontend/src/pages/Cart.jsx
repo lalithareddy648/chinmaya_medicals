@@ -67,14 +67,33 @@ const Cart = () => {
     }
   };
 
+  const handleSubscribe = async (item) => {
+    try {
+      await api.post('/api/health/subscriptions', {
+        medicineId: item.medicineId,
+        quantity: item.quantity,
+        frequencyDays: 30
+      });
+      alert(`Successfully subscribed to ${item.name}! You can manage it in your Health Dashboard.`);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error subscribing to item');
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     // Validate type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    const allowedTypes = ['image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      setUploadError('Invalid file type! Only JPG, JPEG, PNG, and PDF are allowed.');
+      setUploadError('Invalid file type! Only PNG and PDF are allowed.');
+      return;
+    }
+
+    // Validate size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size exceeds the 5MB limit.');
       return;
     }
 
@@ -102,9 +121,14 @@ const Cart = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    const allowedTypes = ['image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
-      setAiMessage('Invalid file type! Only JPG, JPEG, PNG, and PDF are allowed.');
+      setAiMessage('Invalid file type! Only PNG and PDF are allowed.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAiMessage('File size exceeds the 5MB limit.');
       return;
     }
 
@@ -173,7 +197,7 @@ const Cart = () => {
             <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Upload your doctor's prescription and our AI will automatically read it and add the right medicines to your cart.</p>
           </div>
           <div>
-            <input type="file" id="ai-prescription-input" style={{ display: 'none' }} onChange={handleAiUpload} accept=".jpg,.jpeg,.png,.pdf" disabled={aiUploading} />
+            <input type="file" id="ai-prescription-input" style={{ display: 'none' }} onChange={handleAiUpload} accept=".png,.pdf" disabled={aiUploading} />
             <label htmlFor="ai-prescription-input" className="btn" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', color: 'white', cursor: aiUploading ? 'wait' : 'pointer', opacity: aiUploading ? 0.7 : 1, border: 'none' }}>
               {aiUploading ? 'Analyzing with AI...' : 'Upload Prescription'}
             </label>
@@ -250,9 +274,18 @@ const Cart = () => {
                       )}
                     </div>
 
-                    <button className="btn btn-danger btn-sm" onClick={() => handleRemoveItem(item.medicineId)}>
-                      ✕
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <button className="btn btn-danger btn-sm" onClick={() => handleRemoveItem(item.medicineId)}>
+                        ✕
+                      </button>
+                      <button 
+                        className="btn btn-sm" 
+                        style={{ background: 'var(--color-secondary)', color: '#000', fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
+                        onClick={() => handleSubscribe(item)}
+                      >
+                        🔄 Subscribe
+                      </button>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -310,7 +343,7 @@ const Cart = () => {
                       id="prescription-file-input"
                       style={{ display: 'none' }}
                       onChange={handleFileUpload}
-                      accept=".jpg,.jpeg,.png,.pdf"
+                      accept=".png,.pdf"
                     />
                     <label htmlFor="prescription-file-input" style={{ cursor: 'pointer', display: 'block' }}>
                       {uploading ? (
@@ -322,7 +355,7 @@ const Cart = () => {
                         <>
                           <span style={{ fontSize: '1.8rem', display: 'block', marginBottom: '0.5rem' }}>📤</span>
                           <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--color-primary)' }}>Choose Prescription File</span>
-                          <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>JPG, JPEG, PNG, or PDF</span>
+                          <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>PNG or PDF</span>
                         </>
                       )}
                     </label>

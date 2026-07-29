@@ -64,6 +64,11 @@ const Navbar = () => {
                 My Orders
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/health-dashboard" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+                Health Dashboard
+              </NavLink>
+            </li>
             {user.isAdmin && (
               <li>
                 <NavLink to="/admin" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
