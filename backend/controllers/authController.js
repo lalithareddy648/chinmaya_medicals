@@ -35,10 +35,11 @@ export const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Make the first user or email 'admin@chinmaya.com' an admin
+    // Only the very first registered user becomes admin.
+    // Further admins must be promoted by an existing admin via the settings/user-management flow.
     const allUsersRes = await pool.query('SELECT COUNT(*) FROM users');
     const isFirstUser = parseInt(allUsersRes.rows[0].count) === 0;
-    const isAdmin = isFirstUser || email.toLowerCase() === 'admin@chinmaya.com';
+    const isAdmin = isFirstUser;
 
     const id = crypto.randomUUID();
     

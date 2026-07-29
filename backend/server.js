@@ -17,6 +17,7 @@ import { getSettings, updateSettings } from './controllers/settingsController.js
 import { handleAgentChat, readPrescription, identifyMedicine } from './controllers/agentController.js';
 import { getReminders, createReminder, deleteReminder, getSubscriptions, createSubscription, updateSubscriptionStatus } from './controllers/healthController.js';
 import { initializeDB } from './config/db.js';
+import { saveUploadedFile } from './utils/fileStorage.js';
 
 // Middleware
 import { protect, admin } from './middleware/authMiddleware.js';
@@ -64,18 +65,12 @@ if (!fs.existsSync(uploadsDir)) {
 // Serve uploaded prescription files statically
 app.use('/uploads', express.static(uploadsDir));
 
-// Multer Storage Configuration for uploads
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, uploadsDir);
-  },
-  filename(req, file, cb) {
-    cb(
-      null,
-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-    );
-  }
-});
+// Multer Storage Configuration for uploads.
+// We use memory storage everywhere: on Vercel the buffer is uploaded to Vercel Blob
+// (persistent), and locally it's written to disk by saveUploadedFile(). This avoids
+// relying on Vercel's ephemeral /tmp filesystem for anything that needs to survive
+// past a single invocation.
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -153,26 +148,37 @@ app.post('/api/health/subscriptions', protect, createSubscription);
 app.put('/api/health/subscriptions/:id/status', protect, updateSubscriptionStatus);
 
 // Prescription Upload Route
-app.post('/api/upload', protect, upload.single('prescription'), (req, res) => {
+app.post('/api/upload', protect, upload.single('prescription'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  res.json({
-    message: 'Prescription uploaded successfully',
-    filePath: `/uploads/${req.file.filename}`
-  });
+  try {
+    const filePath = await saveUploadedFile(req.file, uploadsDir);
+    res.json({
+      message: 'Prescription uploaded successfully',
+      filePath
+    });
+  } catch (error) {
+    console.error('Prescription upload error:', error);
+    res.status(500).json({ message: 'Failed to store uploaded file' });
+  }
 });
 
 // Generic Image Upload Route
-app.post('/api/upload/image', protect, admin, upload.single('image'), (req, res) => {
+app.post('/api/upload/image', protect, admin, upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }
-  // Format the path properly for URLs
-  res.json({
-    message: 'Image uploaded successfully',
-    filePath: `/uploads/${req.file.filename}`
-  });
+  try {
+    const filePath = await saveUploadedFile(req.file, uploadsDir);
+    res.json({
+      message: 'Image uploaded successfully',
+      filePath
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    res.status(500).json({ message: 'Failed to store uploaded file' });
+  }
 });
 
 // Root check

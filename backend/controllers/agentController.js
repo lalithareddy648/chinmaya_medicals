@@ -1,5 +1,4 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import fs from 'fs';
 import { pool } from '../config/db.js';
 import crypto from 'crypto';
 
@@ -78,8 +77,7 @@ export const readPrescription = async (req, res) => {
       return res.status(400).json({ error: 'No prescription file provided.' });
     }
 
-    const fileData = fs.readFileSync(req.file.path);
-    const base64Image = fileData.toString('base64');
+    const base64Image = req.file.buffer.toString('base64');
     
     const medicinesRes = await pool.query('SELECT * FROM medicines');
     const inventoryInfo = medicinesRes.rows.map(m => `- ${m.name} (ID: ${m.id})`).join('\n');

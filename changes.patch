@@ -1,0 +1,253 @@
+diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml
+deleted file mode 100644
+index 21f3ae5..0000000
+--- a/.github/workflows/deploy.yml
++++ /dev/null
+@@ -1,50 +0,0 @@
+-name: Deploy static content to Pages
+-
+-on:
+-  push:
+-    branches: ['main']
+-  workflow_dispatch:
+-
+-permissions:
+-  contents: read
+-  pages: write
+-  id-token: write
+-
+-concurrency:
+-  group: "pages"
+-  cancel-in-progress: true
+-
+-jobs:
+-  deploy:
+-    environment:
+-      name: github-pages
+-      url: ${{ steps.deployment.outputs.page_url }}
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Checkout
+-        uses: actions/checkout@v4
+-      
+-      - name: Set up Node
+-        uses: actions/setup-node@v4
+-        with:
+-          node-version: 20
+-          
+-      - name: Install dependencies
+-        working-directory: ./frontend
+-        run: npm install
+-        
+-      - name: Build
+-        working-directory: ./frontend
+-        run: npm run build
+-        
+-      - name: Setup Pages
+-        uses: actions/configure-pages@v4
+-        
+-      - name: Upload artifact
+-        uses: actions/upload-pages-artifact@v3
+-        with:
+-          path: './frontend/dist'
+-          
+-      - name: Deploy to GitHub Pages
+-        id: deployment
+-        uses: actions/deploy-pages@v4
+diff --git a/backend/controllers/agentController.js b/backend/controllers/agentController.js
+index 30d845c..680cdc2 100644
+--- a/backend/controllers/agentController.js
++++ b/backend/controllers/agentController.js
+@@ -1,5 +1,4 @@
+ import { GoogleGenerativeAI } from '@google/generative-ai';
+-import fs from 'fs';
+ import { pool } from '../config/db.js';
+ import crypto from 'crypto';
+ 
+@@ -78,8 +77,7 @@ export const readPrescription = async (req, res) => {
+       return res.status(400).json({ error: 'No prescription file provided.' });
+     }
+ 
+-    const fileData = fs.readFileSync(req.file.path);
+-    const base64Image = fileData.toString('base64');
++    const base64Image = req.file.buffer.toString('base64');
+     
+     const medicinesRes = await pool.query('SELECT * FROM medicines');
+     const inventoryInfo = medicinesRes.rows.map(m => `- ${m.name} (ID: ${m.id})`).join('\n');
+diff --git a/backend/controllers/authController.js b/backend/controllers/authController.js
+index 0bd8159..f5bcdbb 100644
+--- a/backend/controllers/authController.js
++++ b/backend/controllers/authController.js
+@@ -35,10 +35,11 @@ export const registerUser = async (req, res) => {
+     const salt = await bcrypt.genSalt(10);
+     const hashedPassword = await bcrypt.hash(password, salt);
+ 
+-    // Make the first user or email 'admin@chinmaya.com' an admin
++    // Only the very first registered user becomes admin.
++    // Further admins must be promoted by an existing admin via the settings/user-management flow.
+     const allUsersRes = await pool.query('SELECT COUNT(*) FROM users');
+     const isFirstUser = parseInt(allUsersRes.rows[0].count) === 0;
+-    const isAdmin = isFirstUser || email.toLowerCase() === 'admin@chinmaya.com';
++    const isAdmin = isFirstUser;
+ 
+     const id = crypto.randomUUID();
+     
+diff --git a/backend/package.json b/backend/package.json
+index 1316375..99302c1 100644
+--- a/backend/package.json
++++ b/backend/package.json
+@@ -11,6 +11,7 @@
+   },
+   "dependencies": {
+     "@google/generative-ai": "^0.24.1",
++    "@vercel/blob": "^0.27.0",
+     "bcryptjs": "^2.4.3",
+     "cors": "^2.8.5",
+     "dotenv": "^16.4.5",
+diff --git a/backend/server.js b/backend/server.js
+index a4f3308..79df47d 100644
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -17,6 +17,7 @@ import { getSettings, updateSettings } from './controllers/settingsController.js
+ import { handleAgentChat, readPrescription, identifyMedicine } from './controllers/agentController.js';
+ import { getReminders, createReminder, deleteReminder, getSubscriptions, createSubscription, updateSubscriptionStatus } from './controllers/healthController.js';
+ import { initializeDB } from './config/db.js';
++import { saveUploadedFile } from './utils/fileStorage.js';
+ 
+ // Middleware
+ import { protect, admin } from './middleware/authMiddleware.js';
+@@ -64,18 +65,12 @@ if (!fs.existsSync(uploadsDir)) {
+ // Serve uploaded prescription files statically
+ app.use('/uploads', express.static(uploadsDir));
+ 
+-// Multer Storage Configuration for uploads
+-const storage = multer.diskStorage({
+-  destination(req, file, cb) {
+-    cb(null, uploadsDir);
+-  },
+-  filename(req, file, cb) {
+-    cb(
+-      null,
+-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
+-    );
+-  }
+-});
++// Multer Storage Configuration for uploads.
++// We use memory storage everywhere: on Vercel the buffer is uploaded to Vercel Blob
++// (persistent), and locally it's written to disk by saveUploadedFile(). This avoids
++// relying on Vercel's ephemeral /tmp filesystem for anything that needs to survive
++// past a single invocation.
++const storage = multer.memoryStorage();
+ 
+ const upload = multer({
+   storage,
+@@ -153,26 +148,37 @@ app.post('/api/health/subscriptions', protect, createSubscription);
+ app.put('/api/health/subscriptions/:id/status', protect, updateSubscriptionStatus);
+ 
+ // Prescription Upload Route
+-app.post('/api/upload', protect, upload.single('prescription'), (req, res) => {
++app.post('/api/upload', protect, upload.single('prescription'), async (req, res) => {
+   if (!req.file) {
+     return res.status(400).json({ message: 'No file uploaded' });
+   }
+-  res.json({
+-    message: 'Prescription uploaded successfully',
+-    filePath: `/uploads/${req.file.filename}`
+-  });
++  try {
++    const filePath = await saveUploadedFile(req.file, uploadsDir);
++    res.json({
++      message: 'Prescription uploaded successfully',
++      filePath
++    });
++  } catch (error) {
++    console.error('Prescription upload error:', error);
++    res.status(500).json({ message: 'Failed to store uploaded file' });
++  }
+ });
+ 
+ // Generic Image Upload Route
+-app.post('/api/upload/image', protect, admin, upload.single('image'), (req, res) => {
++app.post('/api/upload/image', protect, admin, upload.single('image'), async (req, res) => {
+   if (!req.file) {
+     return res.status(400).json({ message: 'No file uploaded' });
+   }
+-  // Format the path properly for URLs
+-  res.json({
+-    message: 'Image uploaded successfully',
+-    filePath: `/uploads/${req.file.filename}`
+-  });
++  try {
++    const filePath = await saveUploadedFile(req.file, uploadsDir);
++    res.json({
++      message: 'Image uploaded successfully',
++      filePath
++    });
++  } catch (error) {
++    console.error('Image upload error:', error);
++    res.status(500).json({ message: 'Failed to store uploaded file' });
++  }
+ });
+ 
+ // Root check
+diff --git a/backend/utils/fileStorage.js b/backend/utils/fileStorage.js
+new file mode 100644
+index 0000000..9e093f2
+--- /dev/null
++++ b/backend/utils/fileStorage.js
+@@ -0,0 +1,32 @@
++import fs from 'fs';
++import path from 'path';
++
++const isVercel = !!process.env.VERCEL;
++
++/**
++ * Persists an uploaded file (from multer) and returns a publicly accessible URL/path.
++ *
++ * - On Vercel: uploads the in-memory buffer to Vercel Blob storage (persists across
++ *   invocations, unlike /tmp) and returns the public blob URL.
++ * - Locally: writes the buffer to the local uploads/ folder and returns a relative
++ *   /uploads/<filename> path, served by the existing express.static middleware.
++ *
++ * Requires the BLOB_READ_WRITE_TOKEN env var to be set in Vercel (automatically
++ * provided once Blob storage is enabled for the project) for the production path.
++ */
++export const saveUploadedFile = async (file, uploadsDir) => {
++  const filename = `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`;
++
++  if (isVercel) {
++    const { put } = await import('@vercel/blob');
++    const blob = await put(filename, file.buffer, {
++      access: 'public',
++      contentType: file.mimetype
++    });
++    return blob.url;
++  }
++
++  const destPath = path.join(uploadsDir, filename);
++  fs.writeFileSync(destPath, file.buffer);
++  return `/uploads/${filename}`;
++};
+diff --git a/backend/utils/mailer.js b/backend/utils/mailer.js
+index f8d6798..0e19191 100644
+--- a/backend/utils/mailer.js
++++ b/backend/utils/mailer.js
+@@ -1,9 +1,16 @@
+ import { Resend } from 'resend';
+ 
+-// Use a placeholder if no key is provided in .env
+-const resend = new Resend(process.env.RESEND_API_KEY || 're_placeholder_key_123');
++let resend = null;
++if (process.env.RESEND_API_KEY) {
++  resend = new Resend(process.env.RESEND_API_KEY);
++} else {
++  console.error('RESEND_API_KEY is not set. Password reset emails will not be sent.');
++}
+ 
+ export const sendResetEmail = async (to, resetToken) => {
++  if (!resend) {
++    throw new Error('Email service is not configured (missing RESEND_API_KEY).');
++  }
+   try {
+     const { data, error } = await resend.emails.send({
+       from: 'Chinmaya Medicals <onboarding@resend.dev>',
