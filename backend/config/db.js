@@ -19,7 +19,22 @@ export const pool = new Pool({
 
 const initializeDB = async () => {
   try {
-    // 1. Run schema.sql
+    // 1. Optional Destructive Reset
+    if (process.env.RESET_DB === 'true') {
+      console.warn('RESET_DB is true: Dropping all tables before initialization...');
+      await pool.query(`
+        DROP TABLE IF EXISTS pill_reminders CASCADE;
+        DROP TABLE IF EXISTS subscriptions CASCADE;
+        DROP TABLE IF EXISTS order_items CASCADE;
+        DROP TABLE IF EXISTS orders CASCADE;
+        DROP TABLE IF EXISTS carts CASCADE;
+        DROP TABLE IF EXISTS medicines CASCADE;
+        DROP TABLE IF EXISTS users CASCADE;
+        DROP TABLE IF EXISTS settings CASCADE;
+      `);
+    }
+
+    // 2. Safe Migration (creates tables if missing)
     const schemaSql = await fs.readFile(SCHEMA_FILE, 'utf-8');
     await pool.query(schemaSql);
     

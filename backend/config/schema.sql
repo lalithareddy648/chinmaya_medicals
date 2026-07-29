@@ -1,12 +1,4 @@
--- drop_and_recreate.sql
-DROP TABLE IF EXISTS pill_reminders;
-DROP TABLE IF EXISTS subscriptions;
-DROP TABLE IF EXISTS order_items;
-DROP TABLE IF EXISTS orders;
-DROP TABLE IF EXISTS carts;
-DROP TABLE IF EXISTS medicines;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS settings;
+-- Safe migration script: Creates tables if they don't exist
 
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR(255) PRIMARY KEY,

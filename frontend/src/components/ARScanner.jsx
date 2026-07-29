@@ -97,7 +97,10 @@ const ARScanner = ({ onClose }) => {
           
           {/* Header */}
           <div className="flex justify-between items-center p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto">
-            <h2 className="text-white font-semibold text-lg tracking-wider">AR MEDICINE SCANNER</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-white font-semibold text-lg tracking-wider">AR MEDICINE SCANNER</h2>
+              <span className="bg-orange-500/80 text-white text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-orange-400 shadow-lg">Demo Mode</span>
+            </div>
             <button 
               onClick={() => { stopCamera(); onClose(); }}
               className="text-white bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"

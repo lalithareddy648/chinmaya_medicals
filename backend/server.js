@@ -137,7 +137,7 @@ app.get('/api/settings', protect, getSettings);
 app.put('/api/settings', protect, admin, updateSettings);
 
 // Agent Routes
-app.post('/api/agent/chat', agentLimiter, handleAgentChat);
+app.post('/api/agent/chat', protect, agentLimiter, handleAgentChat);
 app.post('/api/agent/read-prescription', protect, upload.single('prescriptionImage'), readPrescription);
 
 // Health Routes (Reminders & Subscriptions)
