@@ -12,6 +12,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const SCHEMA_FILE = path.join(__dirname, 'schema.sql');
 
+// Safe production startup diagnostic
+console.log(`DATABASE_URL configured: ${!!process.env.DATABASE_URL}`);
+if (process.env.DATABASE_URL) {
+  try {
+    const parsedUrl = new URL(process.env.DATABASE_URL);
+    console.log(`Database host: ${parsedUrl.hostname}`);
+    console.log(`Database port: ${parsedUrl.port || 5432}`);
+  } catch (e) {
+    console.error("Error parsing DATABASE_URL for diagnostics.");
+  }
+} else {
+  console.error("CRITICAL ERROR: DATABASE_URL is not set in the environment variables!");
+  // In production, we should not proceed if we can't connect to the DB
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
