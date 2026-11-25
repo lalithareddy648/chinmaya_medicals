@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../api';
+import api, { resolveAssetUrl } from '../api';
 import OrderTimeline from '../components/OrderTimeline';
 import LiveTrackingMap from '../components/LiveTrackingMap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -293,7 +293,7 @@ const MyOrders = () => {
                       {order.prescription && (
                         <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-glass)' }}>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>📎 Prescription Attached</div>
-                          <a href={order.prescription} target="_blank" rel="noopener noreferrer"
+                          <a href={resolveAssetUrl(order.prescription)} target="_blank" rel="noopener noreferrer"
                             style={{ color: 'var(--color-primary)', fontSize: '0.85rem', fontWeight: '600', textDecoration: 'underline' }}>
                             View Uploaded File 🔗
                           </a>

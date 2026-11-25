@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chinmaya Medicals</string>
+    <string name="title_activity_main">Chinmaya Medicals</string>
+    <string name="package_name">com.chinmayamedicals.app</string>
+    <string name="custom_url_scheme">com.chinmayamedicals.app</string>
+</resources>

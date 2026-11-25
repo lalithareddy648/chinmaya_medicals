@@ -1,0 +1,19 @@
+{
+  "appId": "com.chinmayamedicals.app",
+  "appName": "Chinmaya Medicals",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#f8faf9",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#12b76a"
+    }
+  }
+}

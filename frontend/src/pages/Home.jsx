@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { resolveAssetUrl } from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -210,7 +210,7 @@ const Home = () => {
 
                   <div style={{ height: '180px', width: '100%', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', overflow: 'hidden', borderRadius: '12px' }}>
                     {med.image ? (
-                      <img src={med.image} alt={med.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={resolveAssetUrl(med.image)} alt={med.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <span style={{ fontSize: '4rem', opacity: 0.2 }}>{CATEGORY_ICONS[med.category]}</span>
                     )}

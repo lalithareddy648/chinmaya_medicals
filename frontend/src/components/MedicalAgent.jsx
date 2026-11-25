@@ -73,7 +73,7 @@ const MedicalAgent = () => {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', zIndex: 50 }}>
+    <div className="floating-agent-wrap">
       <AnimatePresence>
         {isOpen && (
           <motion.div

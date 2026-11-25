@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import api, { resolveAssetUrl } from '../api';
 import LiveTrackingMap from '../components/LiveTrackingMap';
 
 const AdminDashboard = () => {
@@ -93,7 +93,7 @@ const AdminDashboard = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await api.put(`/api/orders/${orderId}/status`, { status: newStatus });
+      await api.put(`/api/orders/${orderId}/status`, { deliveryStatus: newStatus });
       setMessage(`Order #${orderId} status updated to ${newStatus} successfully! ✓`);
       setTimeout(() => setMessage(''), 3000);
       loadData();
@@ -421,7 +421,7 @@ const AdminDashboard = () => {
                           <td style={{ fontSize: '0.85rem' }}>{order.paymentMethod}</td>
                           <td>
                             {order.prescription ? (
-                              <a href={order.prescription} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: '0.8rem' }}>
+                              <a href={resolveAssetUrl(order.prescription)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: '0.8rem' }}>
                                 View File 📎
                               </a>
                             ) : (

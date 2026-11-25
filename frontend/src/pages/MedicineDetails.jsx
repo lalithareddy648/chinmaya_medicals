@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { resolveAssetUrl } from '../api';
 import { AuthContext } from '../context/AuthContext';
 
 import { toast } from 'react-hot-toast';
@@ -128,7 +128,7 @@ const MedicineDetails = () => {
         {/* Visual Graphic representation */}
         <div className="details-visual" style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
           {medicine.image ? (
-            <img src={medicine.image} alt={medicine.name} style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '300px' }} />
+            <img src={resolveAssetUrl(medicine.image)} alt={medicine.name} style={{ width: '100%', height: '100%', objectFit: 'contain', maxHeight: '300px' }} />
           ) : (
             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style={{ maxHeight: '200px' }}>
               <defs>
@@ -304,7 +304,7 @@ const MedicineDetails = () => {
                 <div key={med._id} className="medicine-card" style={{ padding: '0', overflow: 'hidden' }}>
                   <div style={{ height: '160px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
                     {med.image ? (
-                      <img src={med.image} alt={med.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                      <img src={resolveAssetUrl(med.image)} alt={med.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     ) : (
                       <span style={{ fontSize: '3rem' }}>{med.category === 'Tablet' ? '💊' : med.category === 'Syrup' ? '🍶' : '💉'}</span>
                     )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import api from '../api';
+import api, { resolveAssetUrl } from '../api';
 import { toast } from 'react-hot-toast';
 import { FiClock, FiCalendar, FiCheck, FiX, FiActivity, FiRefreshCw } from 'react-icons/fi';
 
@@ -128,7 +128,7 @@ const HealthDashboard = () => {
                     <div className="flex justify-between items-start mb-6 pt-2">
                       <div className="flex gap-4 items-center w-full">
                         <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm shrink-0 bg-gray-50 p-2">
-                          <img src={reminder.medicine_image} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+                          <img src={resolveAssetUrl(reminder.medicine_image)} alt="" className="w-full h-full object-contain mix-blend-multiply" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-gray-900 text-lg line-clamp-1 mb-1">{reminder.medicine_name}</h3>
@@ -181,7 +181,7 @@ const HealthDashboard = () => {
                     className={`bg-white p-6 rounded-3xl shadow-sm border transition-all duration-300 hover:shadow-xl flex flex-col sm:flex-row gap-6 ${sub.status === 'Active' ? 'border-indigo-100' : 'border-gray-200 opacity-80 grayscale-[20%]'}`}
                   >
                     <div className="w-28 h-28 rounded-2xl overflow-hidden shadow-sm shrink-0 bg-gray-50 p-2 flex items-center justify-center">
-                      <img src={sub.medicine_image} alt="" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                      <img src={resolveAssetUrl(sub.medicine_image)} alt="" className="max-w-full max-h-full object-contain mix-blend-multiply" />
                     </div>
                     <div className="flex-1 flex flex-col">
                       <div className="flex justify-between items-start mb-3">
