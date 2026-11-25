@@ -222,7 +222,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
   initializeDB().then(() => {
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}...`);

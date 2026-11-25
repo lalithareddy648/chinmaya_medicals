@@ -1,18 +1,23 @@
 import { jest } from '@jest/globals';
 import supertest from 'supertest';
-import app from '../server.js';
-import { pool } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
-const request = supertest(app);
+const mockPool = {
+  query: jest.fn(),
+  connect: jest.fn()
+};
 
-// Mock the pg pool
 jest.unstable_mockModule('../config/db.js', () => ({
-  pool: {
-    query: jest.fn(),
-    connect: jest.fn()
-  }
+  pool: mockPool,
+  initializeDB: jest.fn().mockResolvedValue(undefined)
 }));
+
+const [{ default: app }, { pool }] = await Promise.all([
+  import('../server.js'),
+  import('../config/db.js')
+]);
+
+const request = supertest(app);
 
 describe('API Tests', () => {
   beforeEach(() => {
@@ -85,17 +90,28 @@ describe('API Tests', () => {
       // Mock user lookup for auth middleware
       pool.query.mockResolvedValueOnce({ rows: [{ id: 'user123' }] });
 
-      // Mock cart fetch inside transaction
+      // Mock transaction and order lookup sequence
+      mockClient.query.mockResolvedValueOnce({ rows: [] }); // BEGIN
       mockClient.query.mockResolvedValueOnce({ 
         rows: [{ id: 'cart1', items: [{ medicineId: 'med1', quantity: 10 }] }] 
       });
 
-      // Mock medicine lookup (found)
+      // Mock discount settings lookup
+      mockClient.query.mockResolvedValueOnce({ rows: [] });
+
+      // Mock medicine lookup (stock insufficient)
       mockClient.query.mockResolvedValueOnce({ 
-        rows: [{ id: 'med1', name: 'Aspirin', stock: 5, price: 10, discount: 0 }] 
+        rows: [{ id: 'med1', name: 'Aspirin', stock: 5, price: 10, discount: 0, needs_prescription: false }] 
       });
 
-      // The controller will now see stock (5) < requested (10)
+      // Mock atomic stock update to indicate insufficient stock
+      mockClient.query.mockResolvedValueOnce({ rowCount: 0, rows: [] });
+
+      // Mock stock check after failed update
+      mockClient.query.mockResolvedValueOnce({
+        rows: [{ name: 'Aspirin', stock: 5 }]
+      });
+
       const res = await request.post('/api/orders')
         .set('Authorization', `Bearer ${token}`)
         .send({ 
