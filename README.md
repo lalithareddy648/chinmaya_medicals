@@ -3,7 +3,6 @@
 A full-stack pharmacy and medicine management web application built to
 make medicine browsing, ordering, and store inventory management easier.
 
-**Live Website:** https://chinmaya-medicals.vercel.app\
 **GitHub Repository:**
 https://github.com/lalithareddy648/chinmaya_medicals
 
